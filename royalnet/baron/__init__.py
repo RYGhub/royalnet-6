@@ -5,6 +5,8 @@ import redis
 
 __all__ = (
     "Baron",
+    "BaronError",
+    "BaronAlreadyStartedError",
     "BaronListenerThread",
 )
 
@@ -16,14 +18,25 @@ class Baron:
                  redis_args: Mapping[str, Any],):
         self.publisher: redis.Redis = redis.Redis(**redis_args)
         self.listen_thread: BaronListenerThread = BaronListenerThread(publisher=self.publisher)
-        self.was_started = False
+        self.is_started = False
 
     def listener(self) -> redis.client.PubSub:
         return self.listen_thread.listener
 
     def start(self):
+        """Start the listen thread of the Baron module."""
+        if self.is_started:
+            raise BaronAlreadyStartedError("This Baron module was already started somewhere else.")
         self.listen_thread.start()
-        self.was_started = True
+        self.is_started = True
+
+
+class BaronError(Exception):
+    """An error of the Baron module."""
+
+
+class BaronAlreadyStartedError(Exception):
+    """This Baron module was already started somewhere else."""
 
 
 class BaronListenerThread(threading.Thread):
