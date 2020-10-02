@@ -21,6 +21,7 @@ class Baron:
         self.is_started = False
 
     def listener(self) -> redis.client.PubSub:
+        """Get the listener of the Baron module."""
         return self.listen_thread.listener
 
     def start(self):
@@ -40,9 +41,13 @@ class BaronAlreadyStartedError(Exception):
 
 
 class BaronListenerThread(threading.Thread):
+    """A Thread that creates a PubSub from a Redis instance and constantly listens to it.
+
+    It ignores all messages that do not have an associated callback."""
     def __init__(self, publisher: redis.Redis, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.listener: redis.client.PubSub = publisher.pubsub()
 
     def run(self) -> None:
-        self.listener.listen()
+        while True:
+            self.listener.listen()
