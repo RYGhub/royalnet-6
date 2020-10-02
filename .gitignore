@@ -1,0 +1,8 @@
+# Pycharm
+.idea/
+
+# Python
+**/__pycache__/
+dist/
+*.egg-info/
+**/*.pyc
