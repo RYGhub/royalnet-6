@@ -1,7 +1,6 @@
 from royalnet.typing import *
 import threading
 import redis
-import queue
 
 
 __all__ = (
