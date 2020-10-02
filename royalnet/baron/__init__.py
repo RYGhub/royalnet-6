@@ -1,4 +1,4 @@
-from typing import *
+from royalnet.typing import *
 import threading
 import redis
 import queue
