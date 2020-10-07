@@ -1,3 +1,4 @@
+from __future__ import annotations
 from royalnet.typing import *
 import threading
 import redis
@@ -24,12 +25,13 @@ class Baron:
         """Get the listener of the Baron module."""
         return self.listen_thread.listener
 
-    def start(self):
+    def start(self) -> Baron:
         """Start the listen thread of the Baron module."""
         if self.is_started:
             raise BaronAlreadyStartedError("This Baron module was already started somewhere else.")
         self.listen_thread.start()
         self.is_started = True
+        return self
 
 
 class BaronError(Exception):
