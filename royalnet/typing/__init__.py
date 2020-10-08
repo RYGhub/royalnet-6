@@ -8,4 +8,37 @@ It should be imported with: ::
 
 from typing import *
 
-JSON = Union[None, int, str, List["JSON"], Dict[str, "JSON"]]
+JSON = Union[
+    None,
+    int,
+    str,
+    List["JSON"],
+    Dict[str, "JSON"],
+]
+
+Adventure = Generator[
+    Union[
+        Tuple[
+            Optional["Challenge"],
+            ...
+        ],
+        "Adventure",
+        "Challenge",
+        None,
+    ],
+    Any,
+    Any,
+]
+
+AsyncAdventure = AsyncGenerator[
+    Union[
+        Tuple[
+            Optional["AsyncChallenge"],
+            ...
+        ],
+        "AsyncAdventure",
+        "AsyncChallenge",
+        None,
+    ],
+    Any,
+]

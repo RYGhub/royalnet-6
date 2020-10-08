@@ -1,43 +1,52 @@
 import pytest
 from ..campaign import Campaign
+from ..challenge import Challenge
+from ..exc import *
 
 
 def test_creation():
     def gen():
-        yield
-    campaign = Campaign.create(start=gen())
-    assert campaign
+        yield None, "Created!"
+
+    campaign, data = Campaign.create(start=gen())
+    assert data == "Created!"
 
 
-def test_sending():
+def test_send_receive():
     def gen():
-        hello = yield
-        assert hello == "Hello world!"
-        yield
-    campaign = Campaign.create(start=gen())
-    campaign.next("Hello world!")
+        ping = yield None
+        assert ping == "Ping!"
+        yield None, "Pong!"
+
+    campaign, = Campaign.create(start=gen())
+    pong, = campaign.next("Ping!")
+    assert pong == "Pong!"
 
 
-def test_receiving():
+class FalseChallenge(Challenge):
+    def filter(self, data) -> bool:
+        return False
+
+
+def test_failing_check():
     def gen():
-        yield
-        yield "Hello world!"
-    campaign = Campaign.create(start=gen())
-    response = campaign.next()
-    assert response == "Hello world!"
+        yield FalseChallenge()
+
+    campaign, = Campaign.create(start=gen())
+    with pytest.raises(ChallengeFailedError):
+        campaign.next(None)
 
 
 def test_switching():
     def gen_1():
-        yield
         yield gen_2()
 
     def gen_2():
-        yield "Post-init!"
-        yield "Second message!"
-        yield
-    campaign = Campaign.create(start=gen_1())
-    response = campaign.next()
-    assert response == "Post-init!"
-    response = campaign.next()
-    assert response == "Second message!"
+        yield None, "Post-init!"
+        yield None, "Second message!"
+        yield None
+
+    campaign, data = Campaign.create(start=gen_1())
+    assert data == "Post-init!"
+    data, = campaign.next()
+    assert data == "Second message!"
