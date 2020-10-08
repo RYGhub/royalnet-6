@@ -21,7 +21,7 @@ class Campaign:
     optional data.
     """
 
-    def __init__(self, start: Adventure):
+    def __init__(self, start: Adventure, *args, **kwargs):
         """
         Initialize a Campaign object.
 
@@ -34,15 +34,15 @@ class Campaign:
         self.last_update: datetime.datetime = ...
 
     @classmethod
-    def create(cls, start: Adventure) -> Tuple[Campaign, ...]:
+    def create(cls, start: Adventure, *args, **kwargs) -> Tuple[Campaign, ...]:
         """
         Create a new Campaign object.
 
         :param start: The starting Adventure for the Campaign.
         :return: A tuple containing the created Campaign and optionally a list of extra output.
         """
-        campaign = cls(start=start)
-        output = campaign.next(None)
+        campaign = cls(start=start, *args, **kwargs)
+        output = campaign.next()
         return campaign, *output
 
     def next(self, data: Any = None) -> List:

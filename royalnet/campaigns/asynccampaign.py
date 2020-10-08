@@ -20,7 +20,7 @@ class AsyncCampaign:
     An AsyncCampaign consists of multiple chained AsyncAdventures, which are AsyncGenerators yielding tuples with an
     AsyncChallenge and optional data.
     """
-    def __init__(self, start: AsyncAdventure):
+    def __init__(self, start: AsyncAdventure, *args, **kwargs):
         """
         Initialize an AsyncCampaign object.
 
@@ -33,15 +33,15 @@ class AsyncCampaign:
         self.last_update: datetime.datetime = ...
 
     @classmethod
-    async def create(cls, start: AsyncAdventure) -> Tuple[AsyncCampaign, ...]:
+    async def create(cls, start: AsyncAdventure, *args, **kwargs) -> Tuple[AsyncCampaign, ...]:
         """
         Create a new AsyncCampaign object.
 
         :param start: The starting Adventure for the AsyncCampaign.
         :return: A tuple containing the created AsyncCampaign and optionally a list of extra output.
         """
-        campaign = cls(start=start)
-        output = await campaign.next(None)
+        campaign = cls(start=start, *args, **kwargs)
+        output = await campaign.next()
         return campaign, *output
 
     async def _asend(self, data: Any) -> Any:
