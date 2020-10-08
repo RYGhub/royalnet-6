@@ -34,7 +34,7 @@ def test_failing_check():
 
     campaign, = Campaign.create(start=gen())
     with pytest.raises(ChallengeFailedError):
-        campaign.next(None)
+        campaign.next()
 
 
 def test_switching():

@@ -37,7 +37,7 @@ async def test_failing_check():
 
     campaign, = await AsyncCampaign.create(start=gen())
     with pytest.raises(ChallengeFailedError):
-        await campaign.next(None)
+        await campaign.next()
 
 
 @pytest.mark.asyncio
