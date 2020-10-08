@@ -2,6 +2,7 @@ from __future__ import annotations
 from royalnet.typing import *
 import logging
 import inspect
+import datetime
 log = logging.getLogger(__name__)
 
 
@@ -14,6 +15,7 @@ class AsyncCampaign:
     """
     def __init__(self, start: AsyncGenerator[Any, Any]):
         self._current: AsyncGenerator[Any, Any] = start
+        self.last_update: datetime.datetime = datetime.datetime.now()
 
     @classmethod
     async def create(cls, start: AsyncGenerator[Any, Any]):
@@ -54,4 +56,5 @@ class AsyncCampaign:
             result = await self._asend(None)
             if result is not None:
                 log.warning(f"{self._current} returned a non-null value")
+        self.last_update = datetime.datetime.now()
         return result

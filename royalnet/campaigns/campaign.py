@@ -2,6 +2,7 @@ from __future__ import annotations
 from royalnet.typing import *
 import logging
 import inspect
+import datetime
 log = logging.getLogger(__name__)
 
 
@@ -15,6 +16,7 @@ class Campaign:
 
     def __init__(self, start: Generator[Any, Any, Any]):
         self._current: Generator[Any, Any, Any] = start
+        self.last_update: datetime.datetime = datetime.datetime.now()
 
     @classmethod
     def create(cls, start: Generator[Any, Any, Any]):
@@ -32,4 +34,5 @@ class Campaign:
             result = self._current.send(None)
             if result is not None:
                 log.warning(f"{self._current} returned a non-null value")
+        self.last_update = datetime.datetime.now()
         return result
