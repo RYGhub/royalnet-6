@@ -20,7 +20,7 @@ class AsyncCampaign:
     An AsyncCampaign consists of multiple chained AsyncAdventures, which are AsyncGenerators yielding tuples with an
     AsyncChallenge and optional data.
     """
-    def __init__(self, start: AsyncAdventure, *args, **kwargs):
+    def __init__(self, start: AsyncAdventure, challenge: Optional[AsyncChallenge], *args, **kwargs):
         """
         Initialize an AsyncCampaign object.
 
@@ -29,20 +29,21 @@ class AsyncCampaign:
         :param start: The starting adventure for the AsyncCampaign.
         """
         self.adventure: AsyncAdventure = start
-        self.challenge: AsyncChallenge = TrueAsyncChallenge()
+        self.challenge: AsyncChallenge = challenge or TrueAsyncChallenge()
         self.last_update: datetime.datetime = ...
 
     @classmethod
-    async def create(cls, start: AsyncAdventure, *args, **kwargs) -> Tuple[AsyncCampaign, ...]:
+    async def create(cls, start: AsyncAdventure, challenge: Optional[AsyncChallenge] = None, *args, **kwargs) -> AsyncCampaign:
         """
         Create a new AsyncCampaign object.
 
         :param start: The starting Adventure for the AsyncCampaign.
-        :return: A tuple containing the created AsyncCampaign and optionally a list of extra output.
+        :param challenge: The AsyncChallenge the campaign should start with.
+        :return: The created AsyncCampaign.
         """
-        campaign = cls(start=start, *args, **kwargs)
-        output = await campaign.next()
-        return campaign, *output
+        campaign = cls(start=start, challenge=challenge, *args, **kwargs)
+        await campaign._asend(None)
+        return campaign
 
     async def _asend(self, data: Any) -> Any:
         try:
@@ -80,6 +81,7 @@ class AsyncCampaign:
         if inspect.isasyncgen(result):
             await self._aclose()
             self.adventure = result
+            await self._asend(None)
             return await self.next(data)
         elif isinstance(result, AsyncChallenge):
             self.challenge = result

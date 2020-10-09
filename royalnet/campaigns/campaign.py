@@ -21,29 +21,28 @@ class Campaign:
     optional data.
     """
 
-    def __init__(self, start: Adventure, *args, **kwargs):
+    def __init__(self, start: Adventure, challenge: Optional[Challenge] = None, *args, **kwargs):
         """
         Initialize a Campaign object.
 
         .. warning:: Do not use this, use the Campaign.create() method instead!
-
-        :param start: The starting adventure for the Campaign.
         """
         self.adventure: Adventure = start
-        self.challenge: Challenge = TrueChallenge()
+        self.challenge: Challenge = challenge or TrueChallenge()
         self.last_update: datetime.datetime = ...
 
     @classmethod
-    def create(cls, start: Adventure, *args, **kwargs) -> Tuple[Campaign, ...]:
+    def create(cls, start: Adventure, challenge: Optional[Challenge] = None, *args, **kwargs) -> Campaign:
         """
         Create a new Campaign object.
 
         :param start: The starting Adventure for the Campaign.
-        :return: A tuple containing the created Campaign and optionally a list of extra output.
+        :param challenge: The Challenge the campaign should start with.
+        :return: The created Campaign.
         """
-        campaign = cls(start=start, *args, **kwargs)
-        output = campaign.next()
-        return campaign, *output
+        campaign = cls(start=start, challenge=challenge, *args, **kwargs)
+        campaign.adventure.send(None)
+        return campaign
 
     def next(self, data: Any = None) -> List:
         """
@@ -60,6 +59,7 @@ class Campaign:
         if inspect.isgenerator(result):
             self.adventure.close()
             self.adventure = result
+            self.adventure.send(None)
             return self.next(data)
         elif isinstance(result, Challenge):
             self.challenge = result
