@@ -2,6 +2,8 @@ from royalnet.typing import *
 import os
 import json
 import re
+import toml
+import json
 
 from .errors import *
 
@@ -11,9 +13,39 @@ class Scroll:
 
     key_validator = re.compile(r"^[A-Z.]+$")
 
+    loaders = {
+        ".json": json.load,
+        ".toml": toml.load
+    }
+
     def __init__(self, namespace: str, config: Optional[Dict[str, JSON]] = None):
         self.namespace: str = namespace
         self.config: Optional[Dict[str, JSON]] = config
+
+    @classmethod
+    def from_toml(cls, namespace: str, file_path: os.PathLike):
+        with open(file_path) as file:
+            config = toml.load(file)
+        return cls(namespace, config)
+
+    @classmethod
+    def from_json(cls, namespace: str, file_path: os.PathLike):
+        with open(file_path) as file:
+            config = json.load(file)
+        return cls(namespace, config)
+
+    @classmethod
+    def from_file(cls, namespace: str, file_path: os.PathLike):
+        file, ext = os.path.splitext(file_path)
+        lext = ext.lower()
+
+        with open(file_path) as file:
+            try:
+                config = cls.loaders[lext](file)
+            except KeyError:
+                raise InvalidFileType(f"Invalid extension: {lext}")
+
+        return cls(namespace, config)
 
     @classmethod
     def _validate_key(cls, item: str):
