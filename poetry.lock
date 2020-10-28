@@ -164,14 +164,14 @@ pymysql = ["pymysql"]
 name = "toml"
 version = "0.10.1"
 description = "Python Library for Tom's Obvious, Minimal Language"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
 [metadata]
 lock-version = "1.0"
 python-versions = "^3.8"
-content-hash = "cfa2f8c2057d873519068b3e07797508d54836877d44fe5b40ec5b1f5eeb9dae"
+content-hash = "18a020f5e5899c078cd9c6fe98f82323ce5c0d6f9c7301a0ebc5e3ac1ea69193"
 
 [metadata.files]
 atomicwrites = [

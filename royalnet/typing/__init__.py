@@ -8,10 +8,15 @@ It should be imported with: ::
 
 from typing import *
 
-JSON = Union[
+JSONScalar = Union[
     None,
+    float,
     int,
     str,
+]
+
+JSON = Union[
+    JSONScalar,
     List["JSON"],
     Dict[str, "JSON"],
 ]
