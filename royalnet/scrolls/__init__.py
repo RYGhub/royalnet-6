@@ -11,7 +11,7 @@ from .exc import *
 class Scroll:
     """A configuration handler that allows getting values from both the environment variables and a config file."""
 
-    key_validator = re.compile(r"^[A-Z.]+$")
+    key_validator = re.compile(r"^[A-Za-z.]+$")
 
     loaders = {
         ".json": json.load,
@@ -55,7 +55,7 @@ class Scroll:
 
     def _get_from_environ(self, item: str) -> JSONScalar:
         """Get a configuration value from the environment variables."""
-        key = f"{self.namespace}_{item.replace('.', '_')}"
+        key = f"{self.namespace}_{item.replace('.', '_')}".upper()
 
         try:
             j = os.environ[key]
@@ -74,7 +74,7 @@ class Scroll:
         if self.config is None:
             raise NotFoundError("No config file has been loaded.")
 
-        chain = item.split(".")
+        chain = item.lower().split(".")
 
         current = self.config
 
@@ -86,7 +86,7 @@ class Scroll:
 
         return current
 
-    def __getattribute__(self, item: str):
+    def __getitem__(self, item: str):
         self._validate_key(item)
         try:
             return self._get_from_environ(item)
