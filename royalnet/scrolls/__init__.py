@@ -5,7 +5,7 @@ import re
 import toml
 import json
 
-from .errors import *
+from .exc import *
 
 
 class Scroll:

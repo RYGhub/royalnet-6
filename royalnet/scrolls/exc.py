@@ -1,19 +1,19 @@
 from ..errors import RoyalnetException
 
 
-class ScrollException(RoyalnetException):
-    """An exception raised by the Scroll module."""
+class ScrollsException(RoyalnetException):
+    """An exception raised by the scrolls module."""
 
 
-class NotFoundError(ScrollException):
+class NotFoundError(ScrollsException):
     """The requested config key was not found."""
 
 
-class InvalidFormatError(ScrollException):
+class InvalidFormatError(ScrollsException):
     """The requested config key is not valid."""
 
 
-class ParseError(ScrollException):
+class ParseError(ScrollsException):
     """The config value could not be parsed correctly."""
 
 
@@ -22,7 +22,7 @@ class InvalidFileType(ParseError):
 
 
 __all__ = (
-    "ScrollException",
+    "ScrollsException",
     "NotFoundError",
     "InvalidFormatError",
     "ParseError",
