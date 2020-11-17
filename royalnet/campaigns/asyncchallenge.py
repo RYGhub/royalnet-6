@@ -8,7 +8,7 @@ __all__ = (
 
 
 class AsyncChallenge(metaclass=abc.ABCMeta):
-    """A filter for inputs passed to an AsyncCampaign."""
+    """A filter for inputs passed to an :class:`.AsyncCampaign`."""
 
     @abc.abstractmethod
     async def filter(self, data: Any) -> bool:
@@ -17,7 +17,8 @@ class AsyncChallenge(metaclass=abc.ABCMeta):
 
 
 class TrueAsyncChallenge(AsyncChallenge):
-    """An AsyncChallenge which always returns True."""
+    """An :class:`.AsyncChallenge` which always returns :data:`True`."""
 
     async def filter(self, data: Any) -> bool:
+        """Decide if the data should be skipped or not."""
         return True

@@ -17,7 +17,8 @@ class Makeable:
         Find the item with the specified name, or create it if it doesn't exist.
 
         :param session: The session to be used in the query and creation.
-        :param kwargs: Arguments to use in the filter_by clause and in the item constructor.
+        :param kwargs: Arguments to use in the :meth:`~sqlalchemy.orm.query.Query.filter_by` clause and in the item
+                       constructor.
         :return: The retrieved or created item.
         """
         # Find the item
@@ -35,7 +36,8 @@ class Makeable:
         Find the item with the specified name, and delete it if it exists.
 
         :param session: The session to be used in the query and creation.
-        :param kwargs: Arguments to use in the filter_by clause and in the item constructor.
+        :param kwargs: Arguments to use in the :meth:`~sqlalchemy.orm.query.Query.filter_by` clause and in the item
+                       constructor.
         """
         # Find the item
         item = session.query(cls).filter_by(**kwargs).one_or_none()

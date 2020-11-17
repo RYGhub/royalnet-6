@@ -1,7 +1,17 @@
+"""
+.. deprecated:: 6.0.0a13
+
+This module defines a class that can be used to easily load configuration from a :mod:`json` or :mod:`toml` file and
+from :data:`os.environ`.
+"""
+
 from __future__ import annotations
 from royalnet.typing import *
 import threading
 import redis
+
+import warnings
+warnings.warn("The Baron module is deprecated", DeprecationWarning, stacklevel=2)
 
 
 __all__ = (

@@ -1,6 +1,7 @@
 class ColRepr:
     """
-    A mixin that can be added to a declared class to display all table columns in the __repr__.
+    A mixin that can be added to a declared class to display all columns of the table with their values in the
+    ``__repr__``.
     """
 
     def __repr__(self):

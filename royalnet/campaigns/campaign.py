@@ -17,15 +17,15 @@ class Campaign:
     The Campaign module allows for branching generator-based back-and-forths between the software and the
     user.
 
-    A Campaign consists of multiple chained Adventures, which are Generators yielding tuples with a Campaign and
-    optional data.
+    A :class:`.Campaign` consists of multiple chained Adventures, which are Generators yielding tuples with a
+    :class:`.Campaign` and optional data.
     """
 
     def __init__(self, start: Adventure, challenge: Optional[Challenge] = None, *args, **kwargs):
         """
-        Initialize a Campaign object.
+        Initialize a :class:`.Campaign` object.
 
-        .. warning:: Do not use this, use the Campaign.create() method instead!
+        .. warning:: Do not use this, use the :meth:`.create` method instead!
         """
         self.adventure: Adventure = start
         self.challenge: Challenge = challenge or TrueChallenge()
@@ -34,11 +34,11 @@ class Campaign:
     @classmethod
     def create(cls, start: Adventure, challenge: Optional[Challenge] = None, *args, **kwargs) -> Campaign:
         """
-        Create a new Campaign object.
+        Create a new :class:`.Campaign` object.
 
-        :param start: The starting Adventure for the Campaign.
-        :param challenge: The Challenge the campaign should start with.
-        :return: The created Campaign.
+        :param start: The starting Adventure for the :class:`.Campaign`.
+        :param challenge: The Challenge the :class:`.Campaign` should start with.
+        :return: The created :class:`.Campaign`.
         """
         campaign = cls(start=start, challenge=challenge, *args, **kwargs)
         campaign.adventure.send(None)
@@ -46,11 +46,11 @@ class Campaign:
 
     def next(self, data: Any = None) -> List:
         """
-        Try to advance the Campaign with the passed data.
+        Try to advance the :class:`.Campaign` with the passed data.
 
         :param data: The data to pass to the current Adventure.
         :return: Optional additional data returned by the Adventure.
-        :raises ChallengeFailedError: if the data passed fails the Challenge check.
+        :raises .ChallengeFailedError: if the data passed fails the Challenge check.
         """
         self.last_update = datetime.datetime.now()
         if not self.challenge.filter(data):

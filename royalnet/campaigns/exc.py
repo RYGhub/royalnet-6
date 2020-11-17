@@ -2,7 +2,9 @@ from ..exc import RoyalnetException
 
 
 class CampaignsError(RoyalnetException):
-    """An error related to the campaigns module."""
+    """
+    An error related to the campaigns module.
+    """
 
 
 class ChallengeFailedError(CampaignsError):

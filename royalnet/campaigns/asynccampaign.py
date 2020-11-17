@@ -17,16 +17,17 @@ class AsyncCampaign:
     The AsyncCampaign module allows for branching asyncgenerator-based back-and-forths between the software and the
     user.
 
-    An AsyncCampaign consists of multiple chained AsyncAdventures, which are AsyncGenerators yielding tuples with an
+    An :class:`.AsyncCampaign` consists of multiple chained AsyncAdventures, which are AsyncGenerators yielding tuples
+    with an
     AsyncChallenge and optional data.
     """
     def __init__(self, start: AsyncAdventure, challenge: Optional[AsyncChallenge], *args, **kwargs):
         """
-        Initialize an AsyncCampaign object.
+        Initialize an :class:`.AsyncCampaign` object.
 
-        .. warning:: Do not use this, use the AsyncCampaign.create() method instead!
+        .. warning:: Do not use this, use the :meth:`.create()` method instead!
 
-        :param start: The starting adventure for the AsyncCampaign.
+        :param start: The starting adventure for the :class:`.AsyncCampaign`.
         """
         self.adventure: AsyncAdventure = start
         self.challenge: AsyncChallenge = challenge or TrueAsyncChallenge()
@@ -35,11 +36,11 @@ class AsyncCampaign:
     @classmethod
     async def create(cls, start: AsyncAdventure, challenge: Optional[AsyncChallenge] = None, *args, **kwargs) -> AsyncCampaign:
         """
-        Create a new AsyncCampaign object.
+        Create a new :class:`.AsyncCampaign` object.
 
-        :param start: The starting Adventure for the AsyncCampaign.
+        :param start: The starting Adventure for the :class:`.AsyncCampaign`.
         :param challenge: The AsyncChallenge the campaign should start with.
-        :return: The created AsyncCampaign.
+        :return: The created :class:`.AsyncCampaign`.
         """
         campaign = cls(start=start, challenge=challenge, *args, **kwargs)
         await campaign._asend(None)
@@ -68,7 +69,7 @@ class AsyncCampaign:
 
     async def next(self, data: Any = None) -> List:
         """
-        Try to advance the AsyncCampaign with the passed data.
+        Try to advance the :class:`.AsyncCampaign` with the passed data.
 
         :param data: The data to pass to the current AsyncAdventure.
         :return: Optional additional data returned by the AsyncAdventure.

@@ -8,7 +8,7 @@ __all__ = (
 
 
 class Challenge(metaclass=abc.ABCMeta):
-    """A filter for inputs passed to a Campaign."""
+    """A filter for inputs passed to a :class:`.Campaign`."""
 
     @abc.abstractmethod
     def filter(self, data: Any) -> bool:
@@ -17,7 +17,8 @@ class Challenge(metaclass=abc.ABCMeta):
 
 
 class TrueChallenge(Challenge):
-    """A Challenge which always returns True."""
+    """A :class:`.Challenge` which always returns :data:`True`."""
 
     async def filter(self, data: Any) -> bool:
+        """Decide if the data should be skipped or not."""
         return True
