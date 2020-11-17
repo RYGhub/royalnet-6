@@ -1,6 +1,5 @@
 from royalnet.typing import *
 import os
-import json
 import re
 import toml
 import json
@@ -36,7 +35,7 @@ class Scroll:
 
     @classmethod
     def from_file(cls, namespace: str, file_path: os.PathLike):
-        file, ext = os.path.splitext(file_path)
+        _, ext = os.path.splitext(file_path)
         lext = ext.lower()
 
         with open(file_path) as file:

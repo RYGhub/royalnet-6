@@ -1,4 +1,4 @@
-from ..errors import RoyalnetException
+from ..exc import RoyalnetException
 
 
 class CampaignsError(RoyalnetException):

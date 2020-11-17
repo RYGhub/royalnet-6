@@ -13,7 +13,13 @@ class Makeable:
 
     @classmethod
     def make(cls: Type[T], session: o.session.Session, **kwargs) -> T:
-        """Find the item with the specified name, or create it if it doesn't exist."""
+        """
+        Find the item with the specified name, or create it if it doesn't exist.
+
+        :param session: The session to be used in the query and creation.
+        :param kwargs: Arguments to use in the filter_by clause and in the item constructor.
+        :return: The retrieved or created item.
+        """
         # Find the item
         item = session.query(cls).filter_by(**kwargs).one_or_none()
         # Create the item
@@ -25,7 +31,12 @@ class Makeable:
 
     @classmethod
     def unmake(cls: Type[T], session: o.session.Session, **kwargs) -> None:
-        """Find the item with the specified name, and delete it if it exists."""
+        """
+        Find the item with the specified name, and delete it if it exists.
+
+        :param session: The session to be used in the query and creation.
+        :param kwargs: Arguments to use in the filter_by clause and in the item constructor.
+        """
         # Find the item
         item = session.query(cls).filter_by(**kwargs).one_or_none()
         # Delete the item
