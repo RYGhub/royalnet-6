@@ -55,14 +55,6 @@ class Scroll:
             config = json.load(file)
         return cls(namespace, config)
 
-    loaders = {
-        ".json": from_json,
-        ".toml": from_toml,
-    }
-    """
-    An extension to deserialization function map.
-    """
-
     @classmethod
     def from_file(cls, namespace: str, file_path: os.PathLike, require_file: bool = False) -> Scroll:
         """
@@ -132,6 +124,15 @@ class Scroll:
             return self._get_from_environ(item)
         except NotFoundError:
             return self._get_from_config(item)
+
+
+Scroll.loaders = {
+    ".json": Scroll.from_json,
+    ".toml": Scroll.from_toml,
+}
+"""
+An extension to deserialization function map.
+"""
 
 
 __all__ = ("Scroll",)
