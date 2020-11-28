@@ -23,14 +23,6 @@ class Scroll:
     A regex used to validate config keys.
     """
 
-    loaders = {
-        ".json": json.load,
-        ".toml": toml.load
-    }
-    """
-    An extension to deserialization function map.
-    """
-
     def __init__(self, namespace: str, config: Optional[Dict[str, JSON]] = None):
         self.namespace: str = namespace
         self.config: Optional[Dict[str, JSON]] = config
@@ -63,26 +55,37 @@ class Scroll:
             config = json.load(file)
         return cls(namespace, config)
 
+    loaders = {
+        ".json": from_json,
+        ".toml": from_toml,
+    }
+    """
+    An extension to deserialization function map.
+    """
+
     @classmethod
-    def from_file(cls, namespace: str, file_path: os.PathLike) -> Scroll:
+    def from_file(cls, namespace: str, file_path: os.PathLike, require_file: bool = False) -> Scroll:
         """
-        Try to guess the type of the file and create a new :class:`.Scroll` from it.
+        Try to guess the type of the config file and create a new :class:`.Scroll` from it.
 
         :param namespace: A string prefixed to the environment variable keys to disambiguate between multiple scroll
                           objects.
         :param file_path: The path of the file to load.
+        :param require_file: Require the file to exist for the :class:`.Scroll` to be created.
+        :raise .exc.InvalidFileType: If the file format isn't supported.
+        :raise .exc.MissingConfigFile: If ``require_file`` is set to :data:`True` and the config file does not exist.
         :return: The created :class:`.Scroll` object.
         """
+        if require_file and not os.path.exists(file_path):
+            raise MissingConfigFileError(f"No config file exists at path {file_path}, and require_file is set to True.")
+
         _, ext = os.path.splitext(file_path)
         lext = ext.lower()
 
-        with open(file_path) as file:
-            try:
-                config = cls.loaders[lext](file)
-            except KeyError:
-                raise InvalidFileType(f"Invalid extension: {lext}")
-
-        return cls(namespace, config)
+        try:
+            return cls.loaders[lext](namespace=namespace, file_path=file_path)
+        except KeyError:
+            raise InvalidFileType(f"Invalid extension: {lext}")
 
     @classmethod
     def _validate_key(cls, item: str):

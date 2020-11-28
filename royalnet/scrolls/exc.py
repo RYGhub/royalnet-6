@@ -5,8 +5,12 @@ class ScrollsException(RoyalnetException):
     """An exception raised by the scrolls module."""
 
 
-class NotFoundError(ScrollsException):
+class NotFoundError(ScrollsException, KeyError):
     """The requested config key was not found."""
+
+
+class MissingConfigFileError(ScrollsException, IOError):
+    """The config file does not exist, and ``require_file`` is set to :data:`True`."""
 
 
 class InvalidFormatError(ScrollsException):
@@ -24,6 +28,7 @@ class InvalidFileType(ParseError):
 __all__ = (
     "ScrollsException",
     "NotFoundError",
+    "MissingConfigFileError",
     "InvalidFormatError",
     "ParseError",
     "InvalidFileType",
