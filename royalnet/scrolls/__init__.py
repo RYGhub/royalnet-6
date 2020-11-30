@@ -78,6 +78,8 @@ class Scroll:
             return cls.loaders[lext](namespace=namespace, file_path=file_path)
         except KeyError:
             raise InvalidFileType(f"Invalid extension: {lext}")
+        except FileNotFoundError:
+            return cls(namespace=namespace)
 
     @classmethod
     def _validate_key(cls, item: str):
