@@ -13,6 +13,9 @@ import json
 from .exc import *
 
 
+T = TypeVar("T")
+
+
 class Scroll:
     """
     A configuration handler that allows getting values from both the environment variables and a config file.
@@ -126,6 +129,12 @@ class Scroll:
             return self._get_from_environ(item)
         except NotFoundError:
             return self._get_from_config(item)
+
+    def get(self, item: str, default: T) -> Union[JSONScalar, T]:
+        try:
+            return self[item]
+        except NotFoundError:
+            return default
 
 
 Scroll.loaders = {

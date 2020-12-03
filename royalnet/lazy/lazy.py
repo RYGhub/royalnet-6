@@ -1,6 +1,5 @@
 from __future__ import annotations
 from royalnet.typing import *
-import functools
 
 
 Result = TypeVar("Result")

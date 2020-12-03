@@ -9,7 +9,7 @@ It may be incomplete or outdated, as it is automatically updated.
    :maxdepth: 3
 
    alchemist
-   baron
    campaigns
+   lazy
    scrolls
    typing
