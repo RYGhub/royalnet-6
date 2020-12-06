@@ -1,5 +1,5 @@
-Alchemist autodoc
-=================
+``alchemist`` - SQLAlchemy utilities
+====================================
 
 .. currentmodule:: royalnet.alchemist
 .. automodule:: royalnet.alchemist

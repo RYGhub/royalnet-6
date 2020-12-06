@@ -1,5 +1,5 @@
-Scrolls autodoc
-=================
+``scrolls`` - Configuration loader
+==================================
 
 .. currentmodule:: royalnet.scrolls
 .. automodule:: royalnet.scrolls

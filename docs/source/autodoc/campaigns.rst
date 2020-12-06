@@ -1,5 +1,5 @@
-Campaigns autodoc
-=================
+``campaigns`` - Conversation state manager
+==========================================
 
 .. currentmodule:: royalnet.campaigns
 .. automodule:: royalnet.campaigns
