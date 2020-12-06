@@ -10,6 +10,7 @@ It may be incomplete or outdated, as it is automatically updated.
 
    alchemist
    campaigns
+   engineer
    lazy
    scrolls
    types
