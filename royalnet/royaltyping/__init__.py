@@ -1,9 +1,9 @@
 """
-This module adds some new common types to the default typing package.
+This module adds some new common royaltyping to the default typing package.
 
 It should be imported with: ::
 
-    from royalnet.types import *
+    from royalnet.royaltyping import *
 
 """
 

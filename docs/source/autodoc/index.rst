@@ -12,5 +12,5 @@ It may be incomplete or outdated, as it is automatically updated.
    campaigns
    engineer
    lazy
+   royaltyping
    scrolls
-   types

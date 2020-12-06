@@ -1,5 +1,5 @@
 from __future__ import annotations
-from royalnet.types import *
+from royalnet.royaltyping import *
 
 
 Result = TypeVar("Result")

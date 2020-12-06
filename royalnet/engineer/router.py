@@ -1,6 +1,6 @@
 import functools
 import pydantic
-from royalnet.types import *
+from royalnet.royaltyping import *
 from . import params
 
 

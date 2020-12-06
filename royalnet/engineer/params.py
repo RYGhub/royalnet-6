@@ -1,11 +1,11 @@
-from royalnet.types import *
+from royalnet.royaltyping import *
 import pydantic
 import inspect
 
 
 class ModelConfig(pydantic.BaseConfig):
     """
-    A :mod:`pydantic` model config which allows for arbitrary types.
+    A :mod:`pydantic` model config which allows for arbitrary royaltyping.
     """
     arbitrary_types_allowed = True
 

@@ -1,4 +1,4 @@
-from royalnet.types import *
+from royalnet.royaltyping import *
 import sqlalchemy.orm as o
 
 
