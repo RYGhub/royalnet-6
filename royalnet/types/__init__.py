@@ -8,6 +8,9 @@ It should be imported with: ::
 """
 
 from typing import *
+# noinspection PyUnresolvedReferences
+from typing import IO, TextIO, BinaryIO
+
 
 JSONScalar = Union[
     None,
