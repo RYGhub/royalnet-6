@@ -1,5 +1,5 @@
 from __future__ import annotations
-from royalnet.typing import *
+from royalnet.types import *
 import logging
 import inspect
 import datetime

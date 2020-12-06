@@ -12,4 +12,4 @@ It may be incomplete or outdated, as it is automatically updated.
    campaigns
    lazy
    scrolls
-   typing
+   types

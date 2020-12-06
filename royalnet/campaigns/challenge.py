@@ -1,4 +1,4 @@
-from royalnet.typing import *
+from royalnet.types import *
 import abc
 
 __all__ = (

@@ -3,7 +3,7 @@ This module adds some new common types to the default typing package.
 
 It should be imported with: ::
 
-    from royalnet.typing import *
+    from royalnet.types import *
 
 """
 

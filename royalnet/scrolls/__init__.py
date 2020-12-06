@@ -4,7 +4,7 @@ from :data:`os.environ`.
 """
 
 from __future__ import annotations
-from royalnet.typing import *
+from royalnet.types import *
 import os
 import re
 import toml
