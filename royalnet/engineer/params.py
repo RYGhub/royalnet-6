@@ -31,7 +31,7 @@ def parameter_to_field(param: inspect.Parameter, **kwargs) -> Tuple[type, pydant
         return (
             param.annotation,
             pydantic.Field(
-                default=param.default if param.default else None,
+                default=param.default if param.default is not inspect.Parameter.empty else ...,
                 title=param.name,
                 **kwargs,
             ),
@@ -52,12 +52,12 @@ def signature_to_model(f: Callable, __config__: pydantic.BaseConfig = ModelConfi
     name: str = f.__name__
     signature: inspect.Signature = inspect.signature(f)
 
-    params = {key: parameter_to_field(value) for key, value in signature.parameters if not key.startswith("_")}
+    params = {key: parameter_to_field(value) for key, value in signature.parameters.items() if not key.startswith("_")}
 
-    model: Type[pydantic.BaseModel] = pydantic.create_model(name,
-                                                            __config__=ModelConfig,
-                                                            **params,
-                                                            **extra_params)
+    model = pydantic.create_model(name,
+                                  __config__=ModelConfig,
+                                  **params,
+                                  **extra_params)
     return model
 
 
