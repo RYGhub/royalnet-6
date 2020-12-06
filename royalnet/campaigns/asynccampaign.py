@@ -18,8 +18,7 @@ class AsyncCampaign:
     user.
 
     An :class:`.AsyncCampaign` consists of multiple chained AsyncAdventures, which are AsyncGenerators yielding tuples
-    with an
-    AsyncChallenge and optional data.
+    with an AsyncChallenge and optional data.
     """
     def __init__(self, start: AsyncAdventure, challenge: Optional[AsyncChallenge], *args, **kwargs):
         """
