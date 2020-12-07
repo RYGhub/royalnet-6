@@ -40,11 +40,11 @@ def parameter_to_field(param: inspect.Parameter, **kwargs) -> Tuple[type, pydant
 
 def signature_to_model(f: Callable, __config__: pydantic.BaseConfig = ModelConfig, **extra_params):
     """
-    Convert the signature of a function to a pydantic model.
+    Convert the signature of a async function to a pydantic model.
 
     Arguments starting with ``_`` are ignored.
 
-    :param f: The function to use the signature of.
+    :param f: The async function to use the signature of.
     :param __config__: The config the pydantic model should use.
     :param extra_params: Extra parameters to be added to the model.
     :return: The created pydantic model.

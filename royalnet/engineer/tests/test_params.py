@@ -6,14 +6,14 @@ import royalnet.engineer as re
 
 
 @pytest.fixture
-def a_random_function():
+async def my_async_function():
     def f(*, big_f: str, _hidden: int) -> str:
         return big_f
     return f
 
 
-def test_parameter_to_field(a_random_function):
-    signature = inspect.signature(a_random_function)
+def test_parameter_to_field(my_async_function):
+    signature = inspect.signature(my_async_function)
     parameter = signature.parameters["big_f"]
     t, fieldinfo = re.parameter_to_field(parameter)
     assert isinstance(fieldinfo, pydantic.fields.FieldInfo)
@@ -21,8 +21,8 @@ def test_parameter_to_field(a_random_function):
     assert fieldinfo.title == parameter.name == "big_f"
 
 
-def test_signature_to_model(a_random_function):
-    Model = re.signature_to_model(a_random_function)
+def test_signature_to_model(my_async_function):
+    Model = re.signature_to_model(my_async_function)
     assert callable(Model)
 
     model = Model(big_f="banana")
