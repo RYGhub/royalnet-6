@@ -56,9 +56,9 @@ def test_signature_to_model(my_function):
 
 
 # noinspection PyTypeChecker
-class TestValidateTypes:
+class TestTeleporter:
     def test_standard_function(self):
-        @re.validate_types()
+        @re.teleporter()
         def standard_function(a: int, b: int, _return_str: bool = False) -> int:
             if _return_str:
                 return "You asked me this."
@@ -91,7 +91,7 @@ class TestValidateTypes:
 
     @pytest.mark.asyncio
     async def test_async_function(self):
-        @re.validate_types(is_async=True)
+        @re.teleporter(is_async=True)
         async def async_function(a: int, b: int, _return_str: bool = False) -> int:
             if _return_str:
                 return "You asked me this."
@@ -123,7 +123,7 @@ class TestValidateTypes:
             _ = await async_function(1, 2)
 
     def test_only_input(self):
-        @re.validate_types(validate_output=False)
+        @re.teleporter(validate_output=False)
         def standard_function(a: int, b: int, _return_str: bool = False) -> int:
             if _return_str:
                 return "You asked me this."
@@ -154,7 +154,7 @@ class TestValidateTypes:
             _ = standard_function(1, 2)
 
     def test_only_output(self):
-        @re.validate_types(validate_input=False)
+        @re.teleporter(validate_input=False)
         def standard_function(a: int, b: int, _return_str: bool = False) -> int:
             if _return_str:
                 return "You asked me this."

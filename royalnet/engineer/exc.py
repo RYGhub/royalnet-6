@@ -8,19 +8,19 @@ class EngineerException(royalnet.exc.RoyalnetException):
     """
 
 
-class ValidationError(EngineerException, pydantic.ValidationError):
+class TeleporterError(EngineerException, pydantic.ValidationError):
     """
     The validation of some object though a :mod:`pydantic` model failed.
     """
 
 
-class InputValidationError(ValidationError):
+class InTeleporterError(TeleporterError):
     """
     The input parameters validation failed.
     """
 
 
-class OutputValidationError(ValidationError):
+class OutTeleporterError(TeleporterError):
     """
     The return value validation failed.
     """

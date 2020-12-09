@@ -10,9 +10,9 @@ Model = TypeVar("Model")
 Value = TypeVar("Value")
 
 
-class ModelConfig(pydantic.BaseConfig):
+class TeleporterConfig(pydantic.BaseConfig):
     """
-    A :mod:`pydantic` model config which allows for arbitrary royaltyping.
+    A :mod:`pydantic` model config which allows for arbitrary types.
     """
     arbitrary_types_allowed = True
 
@@ -46,7 +46,7 @@ def parameter_to_field(param: inspect.Parameter, **kwargs) -> Tuple[type, pydant
 
 
 def signature_to_model(f: Callable,
-                       __config__: Type[pydantic.BaseConfig] = ModelConfig,
+                       __config__: Type[pydantic.BaseConfig] = TeleporterConfig,
                        extra_params: Dict[str, type] = None) -> Tuple[type, type]:
     """
     Convert the signature of a function to two pydantic models: one for the input and another one for the output.
@@ -70,11 +70,11 @@ def signature_to_model(f: Callable,
     }
 
     input_model = pydantic.create_model(f"{f.__name__}Input",
-                                        __config__=ModelConfig,
+                                        __config__=TeleporterConfig,
                                         **model_params,
                                         **extra_params)
     output_model = pydantic.create_model(f"{f.__name__}Output",
-                                         __config__=ModelConfig,
+                                         __config__=TeleporterConfig,
                                          __root__=(signature.return_annotation, pydantic.Field(..., title="Returns")))
 
     return input_model, output_model
@@ -100,7 +100,7 @@ def split_kwargs(**kwargs) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     return model_params, extra_params
 
 
-def validate_multiple(__model: type, **kwargs):
+def teleport_in(__model: type, **kwargs):
     """
     Validate the kwargs passed to this function through the passed :mod:`pydantic` ``__model``.
 
@@ -111,10 +111,10 @@ def validate_multiple(__model: type, **kwargs):
     try:
         return __model(**kwargs)
     except pydantic.ValidationError as e:
-        raise exc.InputValidationError(errors=e.raw_errors, model=e.model)
+        raise exc.InTeleporterError(errors=e.raw_errors, model=e.model)
 
 
-def validate_single(__model: type, value: Value) -> Value:
+def teleport_out(__model: type, value: Value) -> Value:
     """
     Validate a single value passed to this function through the ``__root__`` of the passed :mod:`pydantic` ``__model``.
 
@@ -126,15 +126,15 @@ def validate_single(__model: type, value: Value) -> Value:
     try:
         return __model(__root__=value).__root__
     except pydantic.ValidationError as e:
-        raise exc.OutputValidationError(errors=e.raw_errors, model=e.model)
+        raise exc.OutTeleporterError(errors=e.raw_errors, model=e.model)
 
 
-def validate_types(__config__: Type[pydantic.BaseConfig] = ModelConfig,
-                   is_async: bool = False,
-                   validate_input: bool = True,
-                   validate_output: bool = True):
+def teleporter(__config__: Type[pydantic.BaseConfig] = TeleporterConfig,
+               is_async: bool = False,
+               validate_input: bool = True,
+               validate_output: bool = True):
     """
-    A decorator factory that returns a decorator which validates a function's passed arguments and its returned value
+    A factory that returns a decorator which validates a function's passed arguments and its returned value
     using a :mod:`pydantic` model.
 
    .. warning:: By using this, the function will stop accepting positional arguments, and will only accept
@@ -157,22 +157,22 @@ def validate_types(__config__: Type[pydantic.BaseConfig] = ModelConfig,
             async def decorated(**kwargs):
                 if validate_input:
                     model_kwargs, extra_kwargs = split_kwargs(**kwargs)
-                    model_kwargs = validate_multiple(__model=InputModel, **kwargs).dict()
+                    model_kwargs = teleport_in(__model=InputModel, **kwargs).dict()
                     kwargs = {**model_kwargs, **extra_kwargs}
                 result = await f(**kwargs)
                 if validate_output:
-                    result = validate_single(__model=OutputModel, value=result)
+                    result = teleport_out(__model=OutputModel, value=result)
                 return result
         else:
             @functools.wraps(f)
             def decorated(**kwargs):
                 if validate_input:
                     model_kwargs, extra_kwargs = split_kwargs(**kwargs)
-                    model_kwargs = validate_multiple(__model=InputModel, **kwargs).dict()
+                    model_kwargs = teleport_in(__model=InputModel, **kwargs).dict()
                     kwargs = {**model_kwargs, **extra_kwargs}
                 result = f(**kwargs)
                 if validate_output:
-                    result = validate_single(__model=OutputModel, value=result)
+                    result = teleport_out(__model=OutputModel, value=result)
                 return result
 
         return decorated
@@ -181,8 +181,8 @@ def validate_types(__config__: Type[pydantic.BaseConfig] = ModelConfig,
 
 
 __all__ = (
-    "ModelConfig",
+    "TeleporterConfig",
     "parameter_to_field",
     "signature_to_model",
-    "validate_types",
+    "teleporter",
 )
