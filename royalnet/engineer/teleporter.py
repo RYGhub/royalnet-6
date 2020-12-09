@@ -137,7 +137,7 @@ def teleporter(__config__: Type[pydantic.BaseConfig] = TeleporterConfig,
     A factory that returns a decorator which validates a function's passed arguments and its returned value
     using a :mod:`pydantic` model.
 
-   .. warning:: By using this, the function will stop accepting positional arguments, and will only accept
+    .. warning:: By using this, the function will stop accepting positional arguments, and will only accept
                 keyword arguments.
 
     :param __config__: The config the pydantic model should use.
