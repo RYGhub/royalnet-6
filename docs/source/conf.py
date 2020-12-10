@@ -73,12 +73,21 @@ intersphinx_mapping = {
 
 # -- Setup function ----------------------------------------------------------
 def setup(app):
-    app.connect("autodoc-skip-member", skip)
     app.add_css_file('royalblue.css')
 
 
-# -- Skip function -----------------------------------------------------------
-def skip(app, what, name: str, obj, would_skip, options):
-    if name == "__init__" or name == "__getitem__" or name == "__getattr__":
-        return not bool(obj.__doc__)
-    return would_skip
+# -- Substitutions -----------------------------------------------------------
+
+
+rst_prolog = """
+
+"""
+
+# -- Automodule settings -----------------------------------------------------
+
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'special-members': '__init__',
+    'undoc-members': True,
+}
