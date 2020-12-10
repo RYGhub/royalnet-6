@@ -138,7 +138,7 @@ def teleporter(__config__: Type[pydantic.BaseConfig] = TeleporterConfig,
     using a :mod:`pydantic` model.
 
     .. warning:: By using this, the function will stop accepting positional arguments, and will only accept
-                keyword arguments.
+                 keyword arguments.
 
     :param __config__: The config the pydantic model should use.
     :param is_async: Whether the decorated function is async or not.
