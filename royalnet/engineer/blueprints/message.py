@@ -2,64 +2,19 @@ from __future__ import annotations
 from royalnet.royaltyping import *
 import abc
 import datetime
-import functools
 
 from .. import exc
+from .blueprint import Blueprint
+from .channel import Channel
 
 
-class Message(metaclass=abc.ABCMeta):
+class Message(Blueprint, metaclass=abc.ABCMeta):
     """
-    An abstract class representing a generic chat message sent in any platform.
+    An abstract class representing a chat message sent in any platform.
 
-    To implement it for a specific platform, override :meth:`__hash__` and the methods returning information that the
-    platform sometimes provides, either returning the value or raising :exc:`.exc.NotAvailableError`.
-
-    All properties are cached using :func:`functools.lru_cache`, so that if they are successful, they are executed only
-    one time.
+    .. seealso:: :class:`.Blueprint`
     """
 
-    @abc.abstractmethod
-    def __hash__(self):
-        """
-        :return: A value that uniquely identifies the message inside this Python process.
-        """
-        raise NotImplementedError()
-
-    def requires(self, *fields) -> None:
-        """
-        Ensure that this message has the specified fields, raising the highest priority exception between all the
-        fields.
-
-        .. code-block::
-
-            def print_msg(message: Message):
-                message.requires(Message.text, Message.timestamp)
-                print(f"{message.timestamp().isoformat()}: {message.text()}")
-
-        :raises .exc.NeverAvailableError: If at least one of the fields raised a :exc:`.exc.NeverAvailableError`.
-        :raises .exc.NotAvailableError: If no field raised a :exc:`.exc.NeverAvailableError`, but at least one raised a
-                                        :exc:`.exc.NotAvailableError`.
-        """
-
-        exceptions = []
-
-        for field in fields:
-            try:
-                field(self)
-            except exc.NeverAvailableError as ex:
-                exceptions.append(ex)
-            except exc.NotAvailableError as ex:
-                exceptions.append(ex)
-
-        if len(exceptions) > 0:
-            raise max(exceptions, key=lambda e: e.priority)
-
-    cache_size = 24
-    """
-    The size of the various :func:`functools.lru_cache`.
-    """
-
-    @functools.lru_cache(cache_size)
     def text(self) -> str:
         """
         :return: The raw text contents of the message.
@@ -68,7 +23,6 @@ class Message(metaclass=abc.ABCMeta):
         """
         raise exc.NeverAvailableError()
 
-    @functools.lru_cache(cache_size)
     def timestamp(self) -> datetime.datetime:
         """
         :return: The :class:`datetime.datetime` at which the message was sent / received.
@@ -77,7 +31,6 @@ class Message(metaclass=abc.ABCMeta):
         """
         raise exc.NeverAvailableError()
 
-    @functools.lru_cache(cache_size)
     def reply_to(self) -> Message:
         """
         :return: The :class:`.Message` this message is a reply to.
@@ -85,6 +38,13 @@ class Message(metaclass=abc.ABCMeta):
         :raises .exc.NotAvailableError: If this message is not a reply to any other message.
         """
         raise exc.NeverAvailableError()
+
+    def channel(self) -> Channel:
+        """
+        :return: The :class:`.Channel` this message was sent in.
+        :raises .exc.NeverAvailableError: If the chat platform does not support channels.
+        :raises .exc.NotAvailableError: If this message was not sent in any channel.
+        """
 
 
 __all__ = (
