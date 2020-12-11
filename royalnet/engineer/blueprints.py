@@ -54,7 +54,12 @@ class Message(metaclass=abc.ABCMeta):
         if len(exceptions) > 0:
             raise max(exceptions, key=lambda e: e.priority)
 
-    @functools.lru_cache()
+    cache_size = 24
+    """
+    The size of the various :func:`functools.lru_cache`.
+    """
+
+    @functools.lru_cache(cache_size)
     def text(self) -> str:
         """
         :return: The raw text contents of the message.
@@ -63,7 +68,7 @@ class Message(metaclass=abc.ABCMeta):
         """
         raise exc.NeverAvailableError()
 
-    @functools.lru_cache()
+    @functools.lru_cache(cache_size)
     def timestamp(self) -> datetime.datetime:
         """
         :return: The :class:`datetime.datetime` at which the message was sent / received.
@@ -72,10 +77,11 @@ class Message(metaclass=abc.ABCMeta):
         """
         raise exc.NeverAvailableError()
 
-    @functools.lru_cache()
+    @functools.lru_cache(cache_size)
     def reply_to(self) -> Message:
         """
         :return: The :class:`.Message` this message is a reply to.
         :raises .exc.NeverAvailableError: If the chat platform does not support replies.
         :raises .exc.NotAvailableError: If this message is not a reply to any other message.
         """
+        raise exc.NeverAvailableError()
