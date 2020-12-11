@@ -27,6 +27,7 @@ class User(Blueprint, metaclass=abc.ABCMeta):
         :param session: A :class:`sqlalchemy.orm.Session` instance to use to fetch the database entry.
         :return: The database entry for this user.
         """
+        raise exc.NeverAvailableError()
 
 
 __all__ = (

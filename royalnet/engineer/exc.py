@@ -19,7 +19,7 @@ class NeverAvailableError(BlueprintError, NotImplementedError):
     The requested property is never supplied by the chat platform the message was sent in.
     """
 
-    priority = -1
+    priority = 1
 
 
 class NotAvailableError(BlueprintError):
@@ -27,7 +27,7 @@ class NotAvailableError(BlueprintError):
     The requested property was not supplied by the chat platform for the specific message this exception was raised in.
     """
 
-    priority = -2
+    priority = 2
 
 
 class TeleporterError(EngineerException, pydantic.ValidationError):

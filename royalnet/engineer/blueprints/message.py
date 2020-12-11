@@ -45,6 +45,7 @@ class Message(Blueprint, metaclass=abc.ABCMeta):
         :raises .exc.NeverAvailableError: If the chat platform does not support channels.
         :raises .exc.NotAvailableError: If this message was not sent in any channel.
         """
+        raise exc.NeverAvailableError()
 
 
 __all__ = (
