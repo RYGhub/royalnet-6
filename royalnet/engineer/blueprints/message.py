@@ -4,7 +4,7 @@ import abc
 import datetime
 import functools
 
-from . import exc
+from .. import exc
 
 
 class Message(metaclass=abc.ABCMeta):
@@ -85,3 +85,8 @@ class Message(metaclass=abc.ABCMeta):
         :raises .exc.NotAvailableError: If this message is not a reply to any other message.
         """
         raise exc.NeverAvailableError()
+
+
+__all__ = (
+    "Message",
+)
