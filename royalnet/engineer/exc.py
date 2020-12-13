@@ -46,3 +46,30 @@ class OutTeleporterError(TeleporterError):
     """
     The return value validation failed.
     """
+
+
+class SentryError(EngineerException):
+    """
+    An error related to the :mod:`royalnet.engineer.sentry`.
+    """
+
+
+class FilterError(SentryError):
+    """
+    An error related to the :class:`royalnet.engineer.sentry.Filter`.
+    """
+
+
+class Discard(FilterError):
+    """
+    Discard the object from the queue.
+    """
+    def __init__(self, obj, message):
+        self.obj = obj
+        self.message = message
+
+    def __repr__(self):
+        return f"<Discard>"
+
+    def __str__(self):
+        return f"Discarded {self.obj}: {self.message}"

@@ -21,6 +21,14 @@
 ----------------------------------------------
 
 .. automodule:: royalnet.engineer.sentry
+   :imported-members:
+
+
+``filter`` - Fluent filtering asyncio queue
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: royalnet.engineer.sentry.filter
+   :imported-members:
 
 
 ``dispenser`` - Function parameter validation
