@@ -56,7 +56,7 @@ class Blueprint(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
-    def requires(self, *fields) -> None:
+    def requires(self, *fields) -> True:
         """
         Ensure that this blueprint has the specified fields, re-raising the highest priority exception raised between
         all of them.
@@ -84,6 +84,8 @@ class Blueprint(metaclass=abc.ABCMeta):
 
         if len(exceptions) > 0:
             raise max(exceptions, key=lambda e: e.priority)
+
+        return True
 
 
 __all__ = (

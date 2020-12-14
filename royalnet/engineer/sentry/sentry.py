@@ -27,23 +27,23 @@ class Sentry:
     def __repr__(self):
         return f"<Sentry>"
 
-    async def get(self, *_, **__) -> Any:
-        """
-        Wait until an :class:`object` leaves the queue, then return it.
-
-        :return: The :class:`object` which entered the queue.
-        """
-        return await self.queue.get()
-
-    async def filter(self):
+    async def f(self):
         """
         Create a :class:`.filters.Filter` object, which can be configured through its fluent interface.
 
-        Remember to call ``.get()`` on the end of the chain.
+        Remember to call ``.get()`` on the end of the chain to finally get the object.
+
+        To get any object, call:
+
+        .. code-block::
+
+           await sentry.f().get()
+
+        .. seealso:: :class:`.filters.Filter`
 
         :return: The created :class:`.filters.Filter`.
         """
-        return Filter(self.get)
+        return Filter(self.queue.get)
 
 
 __all__ = (
