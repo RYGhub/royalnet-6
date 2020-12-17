@@ -18,18 +18,23 @@ class Sentry:
     The size of the object :attr:`.queue`.
     """
 
-    def __init__(self):
-        self.queue: asyncio.Queue = asyncio.Queue(maxsize=12)
+    def __init__(self, filter_type: Type[Filter] = Filter):
+        self.queue: asyncio.Queue = asyncio.Queue(maxsize=self.QUEUE_SIZE)
         """
-        An object queue where incoming :class:`object` are stored.
+        An object queue where incoming :class:`object` are stored, with a size limit of :attr:`.QUEUE_SIZE`.
+        """
+
+        self.filter_type: Type[Filter] = filter_type
+        """
+        The filter to be used in :meth:`.f` calls, by default :class:`.filters.Filter`.
         """
 
     def __repr__(self):
         return f"<Sentry>"
 
-    async def f(self):
+    def f(self):
         """
-        Create a :class:`.filters.Filter` object, which can be configured through its fluent interface.
+        Create a :attr:`.filter_type` object, which can be configured through its fluent interface.
 
         Remember to call ``.get()`` on the end of the chain to finally get the object.
 
@@ -43,7 +48,9 @@ class Sentry:
 
         :return: The created :class:`.filters.Filter`.
         """
-        return Filter(self.queue.get)
+        async def func(_):
+            return await self.queue.get()
+        return self.filter_type(func)
 
 
 __all__ = (

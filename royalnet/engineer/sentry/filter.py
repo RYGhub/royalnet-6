@@ -25,17 +25,30 @@ class Filter:
         """
         Wait until an :class:`object` leaves the queue and passes through the filter, then return it.
 
-        :return: The :class:`object` which entered the queue.
+        :return: The :class:`object` which left the queue.
         """
         while True:
             try:
-                result = await self.func(None)
-            except exc.Discard as e:
-                log.debug(str(e))
+                return await self.get_single()
+            except exc.Discard:
                 continue
-            else:
-                log.debug(f"Dequeued {result}")
-                return result
+
+    async def get_single(self) -> Any:
+        """
+        Let one :class:`object` pass through the filter, then either return it or raise an error if the object should be
+        discarded.
+
+        :return: The :class:`object` which left the queue.
+        :raises exc.Discard: If the object was filtered.
+        """
+        try:
+            result = await self.func(None)
+        except exc.Discard as e:
+            log.debug(str(e))
+            raise
+        else:
+            log.debug(f"Dequeued {result}")
+            return result
 
     @staticmethod
     def _deco_filter(c: Callable[[Any], bool], *, error: str):
@@ -221,7 +234,7 @@ class Filter:
         :param choices: The pattern that should be matched by the text.
         :return: A new :class:`Filter` with the new requirements.
         """
-        return self.__class__(self._deco_check(lambda o: o in choices, error="Not a valid choice")(self.func))
+        return self.filter(lambda o: o in choices, error="Not a valid choice")
 
 
 __all__ = (
