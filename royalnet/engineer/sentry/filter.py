@@ -112,7 +112,7 @@ class Filter:
             return decorated
         return decorator
 
-    def map(self, c: Callable[[Any], bool]) -> Filter:
+    def map(self, c: Callable[[Any], object]) -> Filter:
         """
         Apply the function ``c`` on all objects transiting through the queue:
         - If the function **returns**, its return value replaces the object in the queue;
@@ -184,18 +184,6 @@ class Filter:
         """
         return self.requires(blueprints.Message.text).map(lambda o: o.text())
 
-    @staticmethod
-    def _deco_startswith(prefix: str):
-        def decorator(func):
-            @functools.wraps(func)
-            def decorated(obj):
-                result: str = func(obj)
-                if not result.startswith(prefix):
-                    raise exc.Discard(result, f"Text didn't start with {prefix}")
-                return result
-            return decorated
-        return decorator
-
     def startswith(self, prefix: str):
         """
         Check if an object starts with the specified prefix and discard the objects that do not.
@@ -203,20 +191,16 @@ class Filter:
         :param prefix: The prefix object should start with.
         :return: A new :class:`Filter` with the new requirements.
         """
-        return self.__class__(self._deco_startswith(prefix)(self.func))
+        return self.filter(lambda x: x.startswith(prefix), error=f"Text didn't start with {prefix}")
 
-    @staticmethod
-    def _deco_regex(pattern: Pattern):
-        def decorator(func):
-            @functools.wraps(func)
-            def decorated(obj):
-                result: str = func(obj)
-                if match := pattern.match(result):
-                    return match
-                else:
-                    raise exc.Discard(result, f"Text didn't match pattern {pattern}")
-            return decorated
-        return decorator
+    def endswith(self, suffix: str):
+        """
+        Check if an object ends with the specified suffix and discard the objects that do not.
+
+        :param suffix: The prefix object should start with.
+        :return: A new :class:`Filter` with the new requirements.
+        """
+        return self.filter(lambda x: x.endswith(suffix), error=f"Text didn't end with {suffix}")
 
     def regex(self, pattern: Pattern):
         """
@@ -225,7 +209,13 @@ class Filter:
         :param pattern: The pattern that should be matched by the text.
         :return: A new :class:`Filter` with the new requirements.
         """
-        return self.__class__(self._deco_regex(pattern)(self.func))
+        def mapping(x):
+            if match := pattern.match(x):
+                return match
+            else:
+                raise exc.Discard(x, f"Text didn't match pattern {pattern}")
+
+        return self.map(mapping)
 
     def choices(self, *choices):
         """

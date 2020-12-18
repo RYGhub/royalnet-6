@@ -42,12 +42,11 @@ class Blueprint(metaclass=abc.ABCMeta):
 
     """
 
-    @abc.abstractmethod
     def __init__(self):
         """
         :return: The created object.
         """
-        raise NotImplementedError()
+        pass
 
     @abc.abstractmethod
     def __hash__(self):
