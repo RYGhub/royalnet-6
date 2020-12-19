@@ -2,7 +2,7 @@ import pytest
 import asyncio
 import async_timeout
 import re
-from .. import sentry, exc, blueprints
+from royalnet.engineer import sentry, exc, blueprints
 
 
 @pytest.fixture
@@ -82,6 +82,7 @@ class TestFilter:
     async def test_filter(self, s: sentry.Sentry):
         await s.queue.put(None)
         await s.queue.put(None)
+        await s.queue.put(None)
 
         assert await s.f().filter(lambda x: x is None, "Is not None").get_single() is None
 
@@ -147,28 +148,24 @@ class TestFilter:
                 return 3
 
         avmsg = AvailableMessage()
-        namsg = NotAvailableMessage()
-        nvmsg = NeverAvailableMessage()
-
         await s.queue.put(avmsg)
-        await s.queue.put(namsg)
-        await s.queue.put(nvmsg)
-        await s.queue.put(namsg)
-        await s.queue.put(nvmsg)
+        assert await s.f().requires("text").get_single() is avmsg
 
-        assert await s.f().requires(blueprints.Message.text).get_single() is avmsg
-
+        await s.queue.put(NotAvailableMessage())
         with pytest.raises(exc.Discard):
-            await s.f().requires(blueprints.Message.text).get_single()
+            await s.f().requires("text").get_single()
 
+        await s.queue.put(NeverAvailableMessage())
         with pytest.raises(exc.NeverAvailableError):
-            await s.f().requires(blueprints.Message.text).get_single()
+            await s.f().requires("text").get_single()
 
+        await s.queue.put(NotAvailableMessage())
         with pytest.raises(exc.NotAvailableError):
-            await s.f().requires(blueprints.Message.text, propagate_not_available=True).get_single()
+            await s.f().requires("text", propagate_not_available=True).get_single()
 
+        await s.queue.put(NeverAvailableMessage())
         with pytest.raises(exc.Discard):
-            await s.f().requires(blueprints.Message.text, propagate_never_available=False).get_single()
+            await s.f().requires("text", propagate_never_available=False).get_single()
 
     @pytest.mark.asyncio
     async def test_startswith(self, s: sentry.Sentry):

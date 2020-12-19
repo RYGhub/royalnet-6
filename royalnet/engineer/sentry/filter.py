@@ -8,7 +8,7 @@ from royalnet.royaltyping import *
 import functools
 import logging
 
-from engineer import exc, blueprints
+from .. import exc, blueprints
 
 log = logging.getLogger(__name__)
 
@@ -155,7 +155,7 @@ class Filter:
         - the :class:`.blueprints.Blueprint` never has data for at least one of the fields,
           :exc:`.exc.NotAvailableError` is propagated upwards.
 
-        :param fields: The fields to test for.
+        :param fields: The fields to test for, as strings.
         :param propagate_not_available: If :exc:`.exc.NotAvailableError` should be propagated
                                         instead of discarding the errored object.
         :param propagate_never_available: If :exc:`.exc.NeverAvailableError` should be propagated
@@ -166,11 +166,11 @@ class Filter:
             try:
                 return obj.requires(*fields)
             except exc.NotAvailableError:
-                if not propagate_not_available:
+                if propagate_not_available:
                     raise
                 raise exc.Discard(obj, "Data is not available")
             except exc.NeverAvailableError:
-                if not propagate_never_available:
+                if propagate_never_available:
                     raise
                 raise exc.Discard(obj, "Data is never available")
 
