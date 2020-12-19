@@ -80,12 +80,12 @@ class Filter:
         - If the check **fails**, the object is discarded, with ``error`` as reason;
         - If an error is raised, propagate the error upwards.
 
-        .. seealso:: :meth:`._deco_filter`, :func:`filter`
-
         :param c: A function that takes in input an object and performs a check on it, returning either :data:`True`
                   or :data:`False`.
         :param error: The reason for which objects should be discarded.
         :return: A new :class:`Filter` with this new condition.
+
+        .. seealso:: :meth:`._deco_filter`, :func:`filter`
         """
         return self.__class__(self._deco_filter(c, error=error)(self.func))
 
@@ -97,10 +97,10 @@ class Filter:
         - If the function **returns**, return its return value;
         - If the function **raises** an error, it is propagated upwards.
 
-        .. seealso:: :func:`map`
-
         :param c: A function that takes in input an enqueued object and returns either the same object or something
                   else.
+
+        .. seealso:: :func:`map`
         """
         def decorator(func):
             @functools.wraps(func)
@@ -118,11 +118,11 @@ class Filter:
         - If the function **raises** :exc:`.exc.Discard`, the object is discarded;
         - If the function **raises another error**, propagate the error upwards.
 
-        .. seealso:: :meth:`._deco_map`, :func:`filter`
-
         :param c: A function that takes in input an enqueued object and returns either the same object or something
                   else.
         :return: A new :class:`Filter` with this new condition.
+
+        .. seealso:: :meth:`._deco_map`, :func:`filter`
         """
         return self.__class__(self._deco_map(c)(self.func))
 
@@ -132,6 +132,8 @@ class Filter:
 
         :param t: The type that objects should be instances of.
         :return: A new :class:`Filter` with this new condition.
+
+        .. seealso:: :func:`isinstance`
         """
         return self.filter(lambda o: isinstance(o, t), error=f"Not instance of type {t}")
 
@@ -153,14 +155,14 @@ class Filter:
         - If the :class:`.blueprints.Blueprint` doesn't have data for at least one of the fields, the object is discarded;
         - the :class:`.blueprints.Blueprint` never has data for at least one of the fields, :exc:`.exc.NotAvailableError` is propagated upwards.
 
-        .. seealso:: :meth:`.blueprints.Blueprint.requires`, :meth:`.filter`
-
         :param fields: The fields to test for.
         :param propagate_not_available: If :exc:`.exc.NotAvailableError` should be propagated
                                         instead of discarding the errored object.
         :param propagate_never_available: If :exc:`.exc.NeverAvailableError` should be propagated
                                           instead of discarding the errored object.
         :return: A new :class:`Filter` with this new condition.
+
+        .. seealso:: :meth:`.blueprints.Blueprint.requires`
         """
         def check(obj):
             try:
@@ -181,8 +183,6 @@ class Filter:
               propagate_never_available=True) -> Filter:
         """
         Replace a :class:`.blueprints.Blueprint` with the value of one of its fields.
-
-        .. seealso:: :meth:`.map`
 
         :param field: The field to access.
         :param propagate_not_available: If :exc:`.exc.NotAvailableError` should be propagated
@@ -211,6 +211,8 @@ class Filter:
 
         :param prefix: The prefix object should start with.
         :return: A new :class:`Filter` with the new requirements.
+
+        .. seealso:: :meth:`str.startswith`
         """
         return self.filter(lambda x: x.startswith(prefix), error=f"Text didn't start with {prefix}")
 
@@ -220,6 +222,8 @@ class Filter:
 
         :param suffix: The prefix object should start with.
         :return: A new :class:`Filter` with the new requirements.
+
+        .. seealso:: :meth:`str.endswith`
         """
         return self.filter(lambda x: x.endswith(suffix), error=f"Text didn't end with {suffix}")
 
