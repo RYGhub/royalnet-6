@@ -1,8 +1,3 @@
-"""
-.. note:: I'm not sure about this module. It doesn't seem to be really pythonic. It will probably be deprecated in the
-          future...
-"""
-
 from __future__ import annotations
 from royalnet.royaltyping import *
 import functools
@@ -54,6 +49,7 @@ class Filter:
     def _deco_filter(c: Callable[[Any], bool], *, error: str):
         """
         A decorator which checks the condition ``c`` on all objects transiting through the queue:
+
         - If the check **passes**, the object itself is returned;
         - If the check **fails**, :exc:`.exc.Discard` is raised, with the object and the ``error`` string as parameters;
         - If an error is raised, propagate the error upwards.
@@ -79,6 +75,7 @@ class Filter:
     def filter(self, c: Callable[[Any], bool], error: str) -> Filter:
         """
         Check the condition ``c`` on all objects transiting through the queue:
+
         - If the check **passes**, the object goes on to the next filter;
         - If the check **fails**, the object is discarded, with ``error`` as reason;
         - If an error is raised, propagate the error upwards.
@@ -96,6 +93,7 @@ class Filter:
     def _deco_map(c: Callable[[Any], object]):
         """
         A decorator which applies the function ``c`` on all objects transiting through the queue:
+
         - If the function **returns**, return its return value;
         - If the function **raises** an error, it is propagated upwards.
 
@@ -115,6 +113,7 @@ class Filter:
     def map(self, c: Callable[[Any], object]) -> Filter:
         """
         Apply the function ``c`` on all objects transiting through the queue:
+
         - If the function **returns**, its return value replaces the object in the queue;
         - If the function **raises** :exc:`.exc.Discard`, the object is discarded;
         - If the function **raises another error**, propagate the error upwards.
@@ -149,11 +148,10 @@ class Filter:
                  propagate_never_available=True) -> Filter:
         """
         Test a :class:`.blueprints.Blueprint`'s fields by using its ``.requires()`` method:
+
         - If the :class:`.blueprints.Blueprint` has the appropriate fields, return it;
-        - If the :class:`.blueprints.Blueprint` doesn't have data for at least one of the fields, the object is
-          discarded;
-        - the :class:`.blueprints.Blueprint` never has data for at least one of the fields,
-          :exc:`.exc.NotAvailableError` is propagated upwards.
+        - If the :class:`.blueprints.Blueprint` doesn't have data for at least one of the fields, the object is discarded;
+        - the :class:`.blueprints.Blueprint` never has data for at least one of the fields, :exc:`.exc.NotAvailableError` is propagated upwards.
 
         .. seealso:: :meth:`.blueprints.Blueprint.requires`, :meth:`.filter`
 
