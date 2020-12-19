@@ -42,12 +42,11 @@ class Blueprint(metaclass=abc.ABCMeta):
 
     """
 
-    @abc.abstractmethod
     def __init__(self):
         """
         :return: The created object.
         """
-        raise NotImplementedError()
+        pass
 
     @abc.abstractmethod
     def __hash__(self):
@@ -56,7 +55,7 @@ class Blueprint(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
-    def requires(self, *fields) -> None:
+    def requires(self, *fields) -> True:
         """
         Ensure that this blueprint has the specified fields, re-raising the highest priority exception raised between
         all of them.
@@ -64,7 +63,7 @@ class Blueprint(metaclass=abc.ABCMeta):
         .. code-block::
 
             def print_msg(message: Message):
-                message.requires(Message.text, Message.timestamp)
+                message.requires("text", "timestamp")
                 print(f"{message.timestamp().isoformat()}: {message.text()}")
 
         :raises .exc.NeverAvailableError: If at least one of the fields raised a :exc:`.exc.NeverAvailableError`.
@@ -76,7 +75,7 @@ class Blueprint(metaclass=abc.ABCMeta):
 
         for field in fields:
             try:
-                field(self)
+                self.__getattribute__(field)()
             except exc.NeverAvailableError as ex:
                 exceptions.append(ex)
             except exc.NotAvailableError as ex:
@@ -84,6 +83,8 @@ class Blueprint(metaclass=abc.ABCMeta):
 
         if len(exceptions) > 0:
             raise max(exceptions, key=lambda e: e.priority)
+
+        return True
 
 
 __all__ = (
