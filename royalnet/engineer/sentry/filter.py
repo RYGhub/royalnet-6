@@ -155,7 +155,9 @@ class Filter:
         - the :class:`.blueprints.Blueprint` never has data for at least one of the fields,
           :exc:`.exc.NotAvailableError` is propagated upwards.
 
-        :param fields: The fields to test for, as strings.
+        .. seealso:: :meth:`.blueprints.Blueprint.requires`, :meth:`.filter`
+
+        :param fields: The fields to test for.
         :param propagate_not_available: If :exc:`.exc.NotAvailableError` should be propagated
                                         instead of discarding the errored object.
         :param propagate_never_available: If :exc:`.exc.NeverAvailableError` should be propagated
@@ -176,13 +178,34 @@ class Filter:
 
         return self.filter(check, error=".requires() method returned False")
 
-    def field(self) -> Filter:
+    def field(self, field: str,
+              propagate_not_available=False,
+              propagate_never_available=True) -> Filter:
         """
-        # TODO
+        Replace a :class:`.blueprints.Blueprint` with the value of one of its fields.
 
+        .. seealso:: :meth:`.map`
+
+        :param field: The field to access.
+        :param propagate_not_available: If :exc:`.exc.NotAvailableError` should be propagated
+                                        instead of discarding the errored object.
+        :param propagate_never_available: If :exc:`.exc.NeverAvailableError` should be propagated
+                                          instead of discarding the errored object.
         :return: A new :class:`Filter` with the new requirements.
         """
-        return self.requires(blueprints.Message.text).map(lambda o: o.text())
+        def replace(obj):
+            try:
+                return obj.__getattribute__(field)()
+            except exc.NotAvailableError:
+                if propagate_not_available:
+                    raise
+                raise exc.Discard(obj, "Data is not available")
+            except exc.NeverAvailableError:
+                if propagate_never_available:
+                    raise
+                raise exc.Discard(obj, "Data is never available")
+
+        return self.map(replace)
 
     def startswith(self, prefix: str):
         """

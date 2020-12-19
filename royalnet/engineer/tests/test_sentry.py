@@ -127,45 +127,67 @@ class TestFilter:
         with pytest.raises(exc.Discard):
             await s.f().msg().get_single()
 
+    class AvailableMessage(blueprints.Message):
+        def __hash__(self):
+            return 1
+
+        def text(self) -> str:
+            return "1"
+
+    class NotAvailableMessage(blueprints.Message):
+        def __hash__(self):
+            return 2
+
+        def text(self) -> str:
+            raise exc.NotAvailableError()
+
+    class NeverAvailableMessage(blueprints.Message):
+        def __hash__(self):
+            return 3
+
     @pytest.mark.asyncio
     async def test_requires(self, s: sentry.Sentry):
-        class AvailableMessage(blueprints.Message):
-            def __hash__(self):
-                return 1
-
-            def text(self) -> str:
-                return "1"
-
-        class NotAvailableMessage(blueprints.Message):
-            def __hash__(self):
-                return 2
-
-            def text(self) -> str:
-                raise exc.NotAvailableError()
-
-        class NeverAvailableMessage(blueprints.Message):
-            def __hash__(self):
-                return 3
-
-        avmsg = AvailableMessage()
+        avmsg = self.AvailableMessage()
         await s.queue.put(avmsg)
         assert await s.f().requires("text").get_single() is avmsg
 
-        await s.queue.put(NotAvailableMessage())
+        await s.queue.put(self.NotAvailableMessage())
         with pytest.raises(exc.Discard):
             await s.f().requires("text").get_single()
 
-        await s.queue.put(NeverAvailableMessage())
+        await s.queue.put(self.NeverAvailableMessage())
         with pytest.raises(exc.NeverAvailableError):
             await s.f().requires("text").get_single()
 
-        await s.queue.put(NotAvailableMessage())
+        await s.queue.put(self.NotAvailableMessage())
         with pytest.raises(exc.NotAvailableError):
             await s.f().requires("text", propagate_not_available=True).get_single()
 
-        await s.queue.put(NeverAvailableMessage())
+        await s.queue.put(self.NeverAvailableMessage())
         with pytest.raises(exc.Discard):
             await s.f().requires("text", propagate_never_available=False).get_single()
+
+    @pytest.mark.asyncio
+    async def test_field(self, s: sentry.Sentry):
+        avmsg = self.AvailableMessage()
+        await s.queue.put(avmsg)
+        assert await s.f().field("text").get_single() == "1"
+
+        await s.queue.put(self.NotAvailableMessage())
+        with pytest.raises(exc.Discard):
+            await s.f().field("text").get_single()
+
+        await s.queue.put(self.NeverAvailableMessage())
+        with pytest.raises(exc.NeverAvailableError):
+            await s.f().field("text").get_single()
+
+        await s.queue.put(self.NotAvailableMessage())
+        with pytest.raises(exc.NotAvailableError):
+            await s.f().field("text", propagate_not_available=True).get_single()
+
+        await s.queue.put(self.NeverAvailableMessage())
+        with pytest.raises(exc.Discard):
+            await s.f().field("text", propagate_never_available=False).get_single()
 
     @pytest.mark.asyncio
     async def test_startswith(self, s: sentry.Sentry):
