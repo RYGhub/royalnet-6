@@ -3,7 +3,7 @@ from royalnet.royaltyping import *
 import logging
 import asyncio
 
-from .filter import Filter
+from engineer.wrench.legacy import Filter
 
 log = logging.getLogger(__name__)
 

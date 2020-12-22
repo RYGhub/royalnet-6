@@ -3,100 +3,11 @@ from royalnet.royaltyping import *
 import functools
 import logging
 import abc
+import inspect
 
-from .. import exc, blueprints
+from engineer import exc, blueprints
 
 log = logging.getLogger(__name__)
-
-
-class Wrench(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    async def single(self):
-        raise NotImplementedError()
-
-    async def get(self):
-        while True:
-            try:
-                return await self.single()
-            except exc.Discard:
-                continue
-
-
-class WrenchSource(Wrench):
-    def __init__(self, func: Callable[..., Awaitable[Any]]):
-        self.func: Callable[..., Awaitable[Any]] = func
-        """
-        The coroutine that will act as the source for the filter tree.
-        """
-
-    async def single(self):
-        return await self.func()
-
-
-class WrenchFilter(Wrench, metaclass=abc.ABCMeta):
-    def __init__(self, previous: Wrench):
-        self.previous: Wrench = previous
-        """
-        The previous node in the tree.
-        """
-
-    @abc.abstractmethod
-    async def filter(self, obj: Any) -> Any:
-        raise NotImplementedError()
-
-    async def single(self):
-        return await self.filter(await self.previous.single())
-
-
-class FilterNode:
-    def __init__(self, *,
-                 func: Optional[Callable[..., Awaitable[Any]]] = None,
-                 previous: Optional[FilterNode] = None):
-        self.func: Optional[Callable[[...], Awaitable[Any]]] = func
-
-        self.previous: Optional[FilterNode] = previous
-
-    def __len__(self):
-        """
-        :return: The depth of this node in the filter tree.
-
-        The source node has depth 0.
-        """
-        if self.func:
-            return 0
-        return len(self.previous) + 1
-
-    def __repr__(self):
-        if self.func:
-            return f"{self.__class__.__qualname__}(func={repr(self.func)})"
-
-        return f"{self.__class__.__qualname__}(previous={repr(self.previous)})"
-
-    def is_valid(self):
-        return not (self.func is None and self.previous is None)
-
-    async def single(self, *args, **kwargs):
-        """
-        Let a single :class:`object` pass through the filter, then either return it or raise an error if the object was
-        filtered.
-
-        :param args: Positional arguments to pass to the :attr:`.func`.
-        :param kwargs: Keyworded arguments to pass to the :attr:`.func`.
-        :return: The :class:`object` which passed through the filter tree.
-        :raises exc.Discard: If the :class:`object` was filtered at some point of the tree.
-        """
-        try:
-            if self.func:
-                result = await self.func(*args, **kwargs)
-            elif self.previous:
-                result = await self.previous.single(*args, **kwargs)
-        except exc.Discard as e:
-            log.debug(str(e))
-            raise
-        else:
-            log.debug(f"Dequeued {result}")
-            return result
-
 
 
 class Filter:
@@ -164,20 +75,6 @@ class Filter:
         return decorator
 
     def filter(self, c: Callable[[Any], bool], error: str) -> Filter:
-        """
-        Check the condition ``c`` on all objects transiting through the queue:
-
-        - If the check **passes**, the object goes on to the next filter;
-        - If the check **fails**, the object is discarded, with ``error`` as reason;
-        - If an error is raised, propagate the error upwards.
-
-        :param c: A function that takes in input an object and performs a check on it, returning either :data:`True`
-                  or :data:`False`.
-        :param error: The reason for which objects should be discarded.
-        :return: A new :class:`Filter` with this new condition.
-
-        .. seealso:: :meth:`._deco_filter`, :func:`filter`
-        """
         return self.__class__(self._deco_filter(c, error=error)(self.func))
 
     @staticmethod
