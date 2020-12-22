@@ -13,12 +13,15 @@ class Screw(metaclass=abc.ABCMeta):
     async def single(self, *args, **kwargs):
         raise NotImplementedError()
 
-    async def get(self):
+    async def get(self, *args, **kwargs):
         while True:
             try:
-                return await self.single()
+                return await self.single(*args, **kwargs)
             except exc.Discard:
                 continue
+
+    def __await__(self):
+        return self.get().__await__()
 
     def pipe(self, nut: Callable[[Any], Awaitable[Any]]):
         if callable(nut):
