@@ -1,6 +1,6 @@
 from royalnet.royaltyping import *
 import abc
-from .. import exc
+from .. import exc, blueprints
 
 
 class Nut(metaclass=abc.ABCMeta):
@@ -37,6 +37,15 @@ class Pass(Nut):
         return obj
 
 
+class Discard(Nut):
+    """
+    **Discard** each received object.
+    """
+
+    async def filter(self, obj: Any) -> Any:
+        raise exc.Discard(obj, "Discard filter discards everything")
+
+
 class Check(Nut, metaclass=abc.ABCMeta):
     """
     Check a condition on the received objects:
@@ -46,8 +55,8 @@ class Check(Nut, metaclass=abc.ABCMeta):
     - If an error is raised, it is **propagated**.
     """
 
-    def __init__(self, *, not_: bool = False):
-        self.not_: bool = not_
+    def __init__(self, *, invert: bool = False):
+        self.invert: bool = invert
         """
         If set to :data:`True`, this Nut will invert its results:
         
@@ -57,7 +66,7 @@ class Check(Nut, metaclass=abc.ABCMeta):
         """
 
     def __invert__(self):
-        return self.__class__(not_=not self.not_)
+        return self.__class__(invert=not self.invert)
 
     @abc.abstractmethod
     async def check(self, obj: Any) -> bool:
@@ -80,7 +89,7 @@ class Check(Nut, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     async def filter(self, obj: Any) -> Any:
-        if await self.check(obj) ^ self.not_:
+        if await self.check(obj) ^ self.invert:
             return obj
         else:
             raise exc.Discard(obj=obj, message=self.error(obj))
@@ -144,7 +153,10 @@ class Choice(Check):
 
     def __init__(self, *accepted, **kwargs):
         super().__init__(**kwargs)
-        self.accepted = accepted
+        self.accepted: Collection = accepted
+        """
+        A collection of elements which can be chosen.
+        """
 
     async def check(self, obj: Any) -> bool:
         return obj in self.accepted
@@ -161,12 +173,175 @@ class RegexCheck(Check):
     def __init__(self, pattern: Pattern, **kwargs):
         super().__init__(**kwargs)
         self.pattern: Pattern = pattern
+        """
+        The pattern that should be matched.
+        """
 
     async def check(self, obj: Any) -> bool:
         return bool(self.pattern.match(obj))
 
     def error(self, obj: Any) -> str:
         return f"Didn't match pattern {self.pattern}"
+
+
+class RegexMatch(Nut):
+    """
+    Apply a regex over an object:
+
+    - If it matches, **return** the :class:`re.Match` object;
+    - If it doesn't match, **discard** the object.
+    """
+
+    def __init__(self, pattern: Pattern, **kwargs):
+        super().__init__(**kwargs)
+        self.pattern: Pattern = pattern
+        """
+        The pattern that should be matched.
+        """
+
+    async def filter(self, obj: Any) -> Any:
+        if match := self.pattern.match(obj):
+            return match
+        else:
+            raise exc.Discard(obj, f"Didn't match pattern {obj}")
+
+
+class RegexReplace(Nut):
+    """
+    Apply a regex over an object:
+
+    - If it matches, replace the match(es) with :attr:`.replacement` and **return** the result.
+    - If it doesn't match, **return** the object as it is.
+    """
+
+    def __init__(self, pattern: Pattern, replacement: Union[str, bytes]):
+        self.pattern: Pattern = pattern
+        """
+        The pattern that should be matched.
+        """
+
+        self.replacement: Union[str, bytes] = replacement
+        """
+        The substitution string for the object.
+        """
+
+    async def filter(self, obj: Any) -> Any:
+        return self.pattern.sub(self.replacement, obj)
+
+
+class Blueprint(Type):
+    """
+    Check if an object is a :class:`.blueprint.Blueprint`.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(t=blueprints.Blueprint, **kwargs)
+
+
+class Message(Type):
+    """
+    Check if an object is a :class:`.blueprint.Message`.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(t=blueprints.Message, **kwargs)
+
+
+class BlueprintRequires(Nut):
+    """
+    Test a :class:`.blueprints.Blueprint`'s fields by using the ``.requires()`` method:
+
+    - If the :class:`.blueprints.Blueprint` has the required fields, **return** it;
+    - If the :class:`.blueprints.Blueprint` is missing data in one or more fields (:exc:`.exc.NotAvailableError`),
+      **discard** the object;
+    - If the :class:`.blueprints.Blueprint` does not support one or more fields (:exc:`.exc.NeverAvailableError`),
+      **propagate** :exc:`.exc.NotAvailableError` downwards.
+
+    This behaviour can be changed with :attr:`.propagate_not_available` and :attr:`.propagate_never_available`.
+
+    .. seealso:: :meth:`.blueprints.Blueprint.requires`
+    """
+
+    def __init__(self, *fields: str,
+                 propagate_not_available: bool = False,
+                 propagate_never_available: bool = True):
+        self.fields: Collection[str] = fields
+        """
+        The names of the required fields.
+        """
+
+        self.propagate_not_available: bool = propagate_not_available
+        """        
+        - If :data:`True`, propagate :exc:`.exc.NotAvailableError` downwards.
+        - If :data:`False`, discard objects raising :exc:`.exc.NotAvailableError`.
+        """
+
+        self.propagate_never_available: bool = propagate_never_available
+        """        
+        - If :data:`True`, propagate :exc:`.exc.NeverAvailableError` downwards.
+        - If :data:`False`, discard objects raising :exc:`.exc.NeverAvailableError`.
+        """
+
+    async def filter(self, obj: Any) -> Any:
+        try:
+            obj.requires(*self.fields)
+        except exc.NotAvailableError:
+            if self.propagate_not_available:
+                raise
+            raise exc.Discard(obj, "At least one field is not available")
+        except exc.NeverAvailableError:
+            if self.propagate_never_available:
+                raise
+            raise exc.Discard(obj, "At least one field is never available")
+        return obj
+
+
+class BlueprintField(Nut):
+    """
+    Replace a :class:`.blueprints.Blueprint` with one of its fields.
+
+    - If the :class:`.blueprints.Blueprint` has the required field, **return** its value;
+    - If the :class:`.blueprints.Blueprint` is missing data in the field (:exc:`.exc.NotAvailableError`),
+      **discard** the object;
+    - If the :class:`.blueprints.Blueprint` does not support the field , **propagate**
+      :exc:`.exc.NotAvailableError` downwards.
+
+    This behaviour can be changed with :attr:`.propagate_not_available` and :attr:`.propagate_never_available`.
+
+    .. seealso:: :meth:`.blueprints.Blueprint.requires`
+    """
+
+    def __init__(self, field: str,
+                 propagate_not_available: bool = False,
+                 propagate_never_available: bool = True):
+        self.field: str = field
+        """
+        The name of the field.
+        """
+
+        self.propagate_not_available: bool = propagate_not_available
+        """        
+        - If :data:`True`, propagate :exc:`.exc.NotAvailableError` downwards.
+        - If :data:`False`, discard objects raising :exc:`.exc.NotAvailableError`.
+        """
+
+        self.propagate_never_available: bool = propagate_never_available
+        """        
+        - If :data:`True`, propagate :exc:`.exc.NeverAvailableError` downwards.
+        - If :data:`False`, discard objects raising :exc:`.exc.NeverAvailableError`.
+        """
+
+    async def filter(self, obj: Any) -> Any:
+        try:
+            return obj.__getattribute__(self.field)()
+        except exc.NotAvailableError:
+            if self.propagate_not_available:
+                raise
+            raise exc.Discard(obj, f"The field {self.field} has no data available")
+        except exc.NeverAvailableError:
+            if self.propagate_never_available:
+                raise
+            raise exc.Discard(obj, f"The field {self.field} never has data available")
 
 
 __all__ = (
@@ -178,4 +353,10 @@ __all__ = (
     "EndsWith",
     "Choice",
     "RegexCheck",
+    "RegexMatch",
+    "RegexReplace",
+    "Blueprint",
+    "Message",
+    "BlueprintRequires",
+    "BlueprintField",
 )
