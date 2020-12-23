@@ -1,6 +1,6 @@
 import abc
 
-from .. import exc
+from engineer.legacy import exc
 
 
 class Blueprint(metaclass=abc.ABCMeta):

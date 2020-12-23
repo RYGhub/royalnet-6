@@ -3,8 +3,7 @@ import functools
 from royalnet.royaltyping import *
 import pydantic
 import inspect
-from . import exc
-
+from engineer.legacy import exc
 
 Model = TypeVar("Model")
 Value = TypeVar("Value")

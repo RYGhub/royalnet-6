@@ -74,3 +74,6 @@ An async generator yielding either:
 * another :data:`.AsyncAdventure`;
 * :data:`None`. 
 """
+
+
+Conversation = Callable[["Sentry"], Awaitable[Optional["Conversation"]]]

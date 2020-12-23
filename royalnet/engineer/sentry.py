@@ -1,49 +1,188 @@
+"""
+Sentries are asyncronous receivers for events incoming from Dispensers.
+
+They support event filtering through Wrenches and coroutine functions.
+"""
+
 from __future__ import annotations
-from royalnet.royaltyping import *
+import royalnet.royaltyping as t
+
+import abc
 import logging
 import asyncio
 
-from . import wrench
+from . import discard
+from . import event
+
+if t.TYPE_CHECKING:
+    from .dispenser import Dispenser
 
 log = logging.getLogger(__name__)
 
 
-class Sentry:
+class Sentry(metaclass=abc.ABCMeta):
     """
-    A class that allows using the ``await`` keyword to suspend a command execution until a new message is received.
-    """
-
-    QUEUE_SIZE = 12
-    """
-    The size of the object :attr:`.queue`.
+    The abstract object representing a node of the pipeline.
     """
 
-    def __init__(self, source_type: Type[wrench.ScrewSource] = wrench.ScrewSource):
-        self.queue: asyncio.Queue = asyncio.Queue(maxsize=self.QUEUE_SIZE)
+    @abc.abstractmethod
+    def __len__(self) -> int:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_nowait(self) -> event.Event:
         """
-        An object queue where incoming :class:`object` are stored, with a size limit of :attr:`.QUEUE_SIZE`.
+        Try to get a single :class:`~.events.Event` from the pipeline, without blocking or handling discards.
+
+        :return: The **returned** :class:`~.events.Event`.
+        :raises asyncio.QueueEmpty: If the queue is empty.
+        :raises .discard.Discard: If the object was **discarded** by the pipeline.
+        :raises Exception: If an exception was **raised** in the pipeline.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    async def get(self) -> event.Event:
+        """
+        Try to get a single :class:`~.events.Event` from the pipeline, blocking until something is available, but
+        without handling discards.
+
+        :return: The **returned** :class:`~.events.Event`.
+        :raises .discard.Discard: If the object was **discarded** by the pipeline.
+        :raises Exception: If an exception was **raised** in the pipeline.
+        """
+        raise NotImplementedError()
+
+    async def wait(self) -> event.Event:
+        """
+        Try to get a single :class:`~.events.Event` from the pipeline, blocking until something is available and is not
+        discarded.
+
+        :return: The **returned** :class:`~.events.Event`.
+        :raises Exception: If an exception was **raised** in the pipeline.
+        """
+        while True:
+            try:
+                result = await self.get()
+                log.debug(f"Returned: {result}")
+                return result
+            except discard.Discard as d:
+                log.debug(f"{str(d)}")
+                continue
+
+    def __await__(self):
+        """
+        Awaiting an object implementing :class:`.SentryInterface` corresponds to awaiting :meth:`.wait`.
+        """
+        return self.get().__await__()
+
+    @abc.abstractmethod
+    async def put(self, item: t.Any) -> None:
+        """
+        Insert a new item in the queue.
+
+        :param item: The item to be added.
+        """
+        raise NotImplementedError()
+
+    def filter(self, wrench: t.Callable[[t.Any], t.Awaitable[t.Any]]) -> SentryFilter:
+        """
+        Chain a new filter to the pipeline.
+
+        :param wrench: The filter to add to the chain. It can either be a :class:`.wrench.Wrench`, or a coroutine
+                       function accepting a single object as parameter and returning the same or a different one.
+        :return: A new :class:`.SentryFilter` which includes the filter.
+
+        .. seealso:: :meth:`.__or__`
+        """
+        if callable(wrench):
+            return SentryFilter(previous=self, wrench=wrench)
+        else:
+            raise TypeError("wrench must be either a Wrench or a coroutine function")
+
+    def __or__(self, other: t.Callable[[t.Any], t.Awaitable[t.Any]]) -> SentryFilter:
+        """
+        A unix-pipe-like interface for :meth:`.filter`.
+
+        .. code-block::
+
+           await (sentry | wrench.Type(Message) | wrench.Sync(lambda o: o.text))
+
+        """
+        try:
+            return self.filter(other)
+        except TypeError:
+            raise TypeError("Right-side must be either a Wrench or a coroutine function")
+
+    @abc.abstractmethod
+    def dispenser(self):
+        """
+        Get the :class:`.Dispenser` that created this Sentry.
+
+        :return: The :class:`.Dispenser` object.
+        """
+        raise NotImplementedError()
+
+
+class SentryFilter(Sentry):
+    """
+    A non-root node of the filtering pipeline.
+    """
+
+    def __init__(self, previous: Sentry, wrench: t.Callable[[t.Any], t.Awaitable[t.Any]]):
+        self.previous: Sentry = previous
+        """
+        The previous node of the pipeline.
         """
 
-        self.source_type: Type[wrench.ScrewSource] = source_type
+        self.wrench: t.Callable[[t.Any], t.Awaitable[t.Any]] = wrench
         """
-        The class to be used as source for filter trees.
+        The coroutine function to apply to all objects passing through this node.
         """
 
-    def __repr__(self):
-        return f"<Sentry>"
+    def __len__(self) -> int:
+        return len(self.previous) + 1
 
-    def source(self):
-        """
-        Create a :class:`.wrench.ScrewSource` using the ``self.queue.get`` method as source.
+    def get_nowait(self) -> event.Event:
+        return self.previous.get_nowait()
 
-        :return: The created :class:`.wrench.ScrewSource`.
-        """
-        return self.source_type(func=self.queue.get)
+    async def get(self) -> event.Event:
+        return await self.previous.get()
 
-    def __call__(self, *args, **kwargs):
-        return self.source()
+    async def put(self, item) -> None:
+        return await self.previous.put(item)
+
+    def dispenser(self):
+        return self.previous.dispenser()
+
+
+class SentrySource(Sentry):
+    """
+    The root and source of the pipeline.
+    """
+
+    def __init__(self, dispenser: "Dispenser", queue_size: int = 12):
+        self.queue: asyncio.Queue = asyncio.Queue(maxsize=queue_size)
+        self._dispenser: "Dispenser" = dispenser
+
+    def __len__(self) -> int:
+        return 1
+
+    def get_nowait(self) -> event.Event:
+        return self.queue.get_nowait()
+
+    async def get(self) -> event.Event:
+        return await self.queue.get()
+
+    async def put(self, item) -> None:
+        return await self.queue.put(event)
+
+    async def dispenser(self):
+        return self._dispenser
 
 
 __all__ = (
     "Sentry",
+    "SentryFilter",
+    "SentrySource",
 )

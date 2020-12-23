@@ -1,5 +1,4 @@
 from __future__ import annotations
-from royalnet.royaltyping import *
 import abc
 
 from .. import exc
