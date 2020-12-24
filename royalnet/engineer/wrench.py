@@ -70,7 +70,7 @@ class ErrorAll(Wrench):
         raise exc.DeliberateException("ErrorAll received an object")
 
 
-class Check(Wrench, metaclass=abc.ABCMeta):
+class CheckBase(Wrench, metaclass=abc.ABCMeta):
     """
     Check a condition on the received objects:
 
@@ -119,7 +119,7 @@ class Check(Wrench, metaclass=abc.ABCMeta):
             raise discard.Discard(obj=obj, message=self.error(obj))
 
 
-class Type(Check):
+class Type(CheckBase):
     """
     Check the type of an object:
 
@@ -138,7 +138,7 @@ class Type(Check):
         return f"Not instance of type {self.type}"
 
 
-class StartsWith(Check):
+class StartsWith(CheckBase):
     """
     Check if an object :func:`startswith` a certain prefix.
     """
@@ -154,7 +154,7 @@ class StartsWith(Check):
         return f"Didn't start with {self.prefix}"
 
 
-class EndsWith(Check):
+class EndsWith(CheckBase):
     """
     Check if an object :func:`endswith` a certain suffix.
     """
@@ -170,7 +170,7 @@ class EndsWith(Check):
         return f"Didn't end with {self.suffix}"
 
 
-class Choice(Check):
+class Choice(CheckBase):
     """
     Check if an object is among the accepted list.
     """
@@ -189,7 +189,7 @@ class Choice(Check):
         return f"Not a valid choice"
 
 
-class RegexCheck(Check):
+class RegexCheck(CheckBase):
     """
     Check if an object matches a regex pattern.
     """
@@ -253,9 +253,9 @@ class RegexReplace(Wrench):
         return self.pattern.sub(self.replacement, obj)
 
 
-class Sync(Wrench):
+class Lambda(Wrench):
     """
-    Apply a syncronous function over an object.
+    Apply a syncronous function over the received objects.
     """
 
     def __init__(self, func: t.Callable[[t.Any], t.Any]):
@@ -268,9 +268,33 @@ class Sync(Wrench):
         return self.func(obj)
 
 
+class Check(CheckBase):
+    """
+    Check a condition on the received objects.
+    """
+
+    def __init__(self, func: t.Callable[[t.Any], t.Any], error: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.func: t.Callable[[t.Any], t.Any] = func
+        """
+        The condition to check.
+        """
+
+        self.error: str = error
+        """
+        The error message to display if the check fails.
+        """
+
+    async def check(self, obj: t.Any) -> bool:
+        return self.func(obj)
+
+    def error(self, obj: t.Any) -> str:
+        return self.error
+
+
 __all__ = (
     "Wrench",
-    "Check",
+    "CheckBase",
     "Type",
     "StartsWith",
     "EndsWith",
@@ -278,4 +302,5 @@ __all__ = (
     "RegexCheck",
     "RegexMatch",
     "RegexReplace",
+    "Lambda",
 )

@@ -20,12 +20,11 @@ class Dispenser:
         A :class:`list` of all the running sentries of this dispenser.
         """
 
-    def put(self, item: t.Any):
+    def put(self, item: t.Any) -> None:
         """
         Insert a new item in the queues of all the running sentries.
 
-        :param item:
-        :return:
+        :param item: The item to insert.
         """
         log.debug(f"Putting {item}")
         for sentry in self.sentries:

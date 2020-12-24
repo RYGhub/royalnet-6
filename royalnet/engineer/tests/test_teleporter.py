@@ -2,12 +2,12 @@ import pytest
 import inspect
 import pydantic
 import pydantic.fields
-import royalnet.engineer as re
-import typing
+import royalnet.engineer.teleporter as tp
 
 
 @pytest.fixture
 def my_function():
+    # noinspection PyUnusedLocal
     def f(*, big_f: str, _hidden: int) -> int:
         return _hidden
     return f
@@ -16,14 +16,15 @@ def my_function():
 def test_parameter_to_field(my_function):
     signature = inspect.signature(my_function)
     parameter = signature.parameters["big_f"]
-    t, fieldinfo = re.parameter_to_field(parameter)
+    t, fieldinfo = tp.parameter_to_field(parameter)
     assert isinstance(fieldinfo, pydantic.fields.FieldInfo)
     assert fieldinfo.default is ...
     assert fieldinfo.title == parameter.name == "big_f"
 
 
 def test_signature_to_model(my_function):
-    InputModel, OutputModel = re.signature_to_model(my_function)
+    # noinspection PyPep8Naming
+    InputModel, OutputModel = tp.signature_to_model(my_function)
     assert callable(InputModel)
 
     model = InputModel(big_f="banana")
@@ -58,7 +59,7 @@ def test_signature_to_model(my_function):
 # noinspection PyTypeChecker
 class TestTeleporter:
     def test_standard_function(self):
-        @re.teleporter()
+        @tp.teleporter()
         def standard_function(a: int, b: int, _return_str: bool = False) -> int:
             if _return_str:
                 return "You asked me this."
@@ -91,7 +92,7 @@ class TestTeleporter:
 
     @pytest.mark.asyncio
     async def test_async_function(self):
-        @re.teleporter(is_async=True)
+        @tp.teleporter(is_async=True)
         async def async_function(a: int, b: int, _return_str: bool = False) -> int:
             if _return_str:
                 return "You asked me this."
@@ -123,7 +124,7 @@ class TestTeleporter:
             _ = await async_function(1, 2)
 
     def test_only_input(self):
-        @re.teleporter(validate_output=False)
+        @tp.teleporter(validate_output=False)
         def standard_function(a: int, b: int, _return_str: bool = False) -> int:
             if _return_str:
                 return "You asked me this."
@@ -154,7 +155,7 @@ class TestTeleporter:
             _ = standard_function(1, 2)
 
     def test_only_output(self):
-        @re.teleporter(validate_input=False)
+        @tp.teleporter(validate_input=False)
         def standard_function(a: int, b: int, _return_str: bool = False) -> int:
             if _return_str:
                 return "You asked me this."
