@@ -58,6 +58,13 @@ class Message(Bullet, metaclass=abc.ABCMeta):
         """
         raise exc.NotSupportedError()
 
+    async def reactions(self) -> t.List[Reaction]:
+        """
+        :return: A :class:`list` of reactions to this message, in no particular order.
+        :raises .exc.NotSupportedError: If the frontend does not support reactions.
+        """
+        raise exc.NotSupportedError()
+
 
 class Channel(Bullet, metaclass=abc.ABCMeta):
     """
@@ -106,9 +113,45 @@ class User(Bullet, metaclass=abc.ABCMeta):
         raise exc.NotSupportedError()
 
 
+class Reaction(Bullet, metaclass=abc.ABCMeta):
+    """
+    An abstract class representing a reaction to a chat message.
+    """
+
+    @abc.abstractmethod
+    async def text(self) -> str:
+        """
+        :return: The text displayed on the reaction button.
+        """
+        raise NotImplementedError()
+
+    async def value(self) -> str:
+        """
+        :return: The "data value" of the reaction button.
+
+        .. note:: Calls the :meth:`.text` method if not defined.
+        """
+        return await self.text()
+
+    @abc.abstractmethod
+    async def message(self) -> Message:
+        """
+        :return: The message this was in reaction to.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    async def user(self) -> User:
+        """
+        :return: The user who reacted to the message.
+        """
+        raise NotImplementedError()
+
+
 __all__ = (
     "Bullet",
     "Message",
     "Channel",
     "User",
+    "Reaction",
 )
