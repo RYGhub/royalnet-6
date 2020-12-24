@@ -1,38 +1,27 @@
-import royalnet.exc
 import pydantic
 
 
-class EngineerException(royalnet.exc.RoyalnetException):
+class EngineerException(Exception):
     """
-    An exception raised by the engineer module.
-    """
-
-
-class BlueprintError(EngineerException):
-    """
-    An error related to the :mod:`royalnet.engineer.blueprints`.
+    The base class for errors in :mod:`royalnet.engineer`.
     """
 
 
-class NeverAvailableError(BlueprintError, NotImplementedError):
+class WrenchException(EngineerException):
     """
-    The requested property is never supplied by the chat platform the message was sent in.
-    """
-
-    priority = 1
-
-
-class NotAvailableError(BlueprintError):
-    """
-    The requested property was not supplied by the chat platform for the specific message this exception was raised in.
+    The base class for errors in :mod:`royalnet.engineer.wrench`.
     """
 
-    priority = 2
+
+class DeliberateException(WrenchException):
+    """
+    This exception was deliberately raised by :class:`royalnet.engineer.wrench.ErrorAll`.
+    """
 
 
 class TeleporterError(EngineerException, pydantic.ValidationError):
     """
-    The validation of some object though a :mod:`pydantic` model failed.
+    The base class for errors in :mod:`royalnet.engineer.teleporter`.
     """
 
 
@@ -48,28 +37,13 @@ class OutTeleporterError(TeleporterError):
     """
 
 
-class SentryError(EngineerException):
+class BulletException(EngineerException):
     """
-    An error related to the :mod:`royalnet.engineer.sentry`.
-    """
-
-
-class FilterError(SentryError):
-    """
-    An error related to the :class:`royalnet.engineer.sentry.Filter`.
+    The base class for errors in :mod:`royalnet.engineer.bullet`.
     """
 
 
-class Discard(FilterError):
+class NotSupportedError(BulletException, NotImplementedError):
     """
-    Discard the object from the queue.
+    The requested property isn't available on the current frontend.
     """
-    def __init__(self, obj, message):
-        self.obj = obj
-        self.message = message
-
-    def __repr__(self):
-        return f"<Discard>"
-
-    def __str__(self):
-        return f"Discarded {self.obj}: {self.message}"

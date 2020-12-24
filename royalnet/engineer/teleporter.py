@@ -1,13 +1,19 @@
-import functools
+"""
+The teleporter uses :mod:`pydantic` to validate function parameters and return values.
+"""
 
-from royalnet.royaltyping import *
+from __future__ import annotations
+import royalnet.royaltyping as t
+
+import logging
 import pydantic
 import inspect
+import functools
+
 from . import exc
 
-
-Model = TypeVar("Model")
-Value = TypeVar("Value")
+Value = t.TypeVar("Value")
+log = logging.getLogger(__name__)
 
 
 class TeleporterConfig(pydantic.BaseConfig):
@@ -17,7 +23,7 @@ class TeleporterConfig(pydantic.BaseConfig):
     arbitrary_types_allowed = True
 
 
-def parameter_to_field(param: inspect.Parameter, **kwargs) -> Tuple[type, pydantic.fields.FieldInfo]:
+def parameter_to_field(param: inspect.Parameter, **kwargs) -> t.Tuple[type, pydantic.fields.FieldInfo]:
     """
     Convert a :class:`inspect.Parameter` to a type-field :class:`tuple`, which can be easily passed to
     :func:`pydantic.create_model`.
@@ -45,9 +51,9 @@ def parameter_to_field(param: inspect.Parameter, **kwargs) -> Tuple[type, pydant
         )
 
 
-def signature_to_model(f: Callable,
-                       __config__: Type[pydantic.BaseConfig] = TeleporterConfig,
-                       extra_params: Dict[str, type] = None) -> Tuple[type, type]:
+def signature_to_model(f: t.Callable,
+                       __config__: t.Type[pydantic.BaseConfig] = TeleporterConfig,
+                       extra_params: t.Dict[str, type] = None) -> t.Tuple[type, type]:
     """
     Convert the signature of a function to two pydantic models: one for the input and another one for the output.
 
@@ -80,7 +86,7 @@ def signature_to_model(f: Callable,
     return input_model, output_model
 
 
-def split_kwargs(**kwargs) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def split_kwargs(**kwargs) -> t.Tuple[t.Dict[str, t.Any], t.Dict[str, t.Any]]:
     """
     Split the kwargs passed to this function in two different :class:`dict`, based on whether their name starts with
     ``_`` or not.
@@ -129,7 +135,7 @@ def teleport_out(__model: type, value: Value) -> Value:
         raise exc.OutTeleporterError(errors=e.raw_errors, model=e.model)
 
 
-def teleporter(__config__: Type[pydantic.BaseConfig] = TeleporterConfig,
+def teleporter(__config__: t.Type[pydantic.BaseConfig] = TeleporterConfig,
                is_async: bool = False,
                validate_input: bool = True,
                validate_output: bool = True):
@@ -148,7 +154,7 @@ def teleporter(__config__: Type[pydantic.BaseConfig] = TeleporterConfig,
 
     .. seealso:: :func:`.signature_to_model`
     """
-    def decorator(f: Callable):
+    def decorator(f: t.Callable):
         # noinspection PyPep8Naming
         InputModel, OutputModel = signature_to_model(f, __config__=__config__)
 
