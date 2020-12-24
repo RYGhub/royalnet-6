@@ -1,5 +1,5 @@
 """
-Sentries are asyncronous receivers for events incoming from Dispensers.
+Sentries are asyncronous receivers for events (usually :class:`bullet.Bullet`) incoming from Dispensers.
 
 They support event filtering through Wrenches and coroutine functions.
 """
@@ -12,7 +12,7 @@ import logging
 import asyncio
 
 from . import discard
-from . import event
+from . import bullet
 
 if t.TYPE_CHECKING:
     from .dispenser import Dispenser
@@ -30,11 +30,11 @@ class Sentry(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_nowait(self) -> event.Event:
+    def get_nowait(self) -> bullet.Bullet:
         """
-        Try to get a single :class:`~.events.Event` from the pipeline, without blocking or handling discards.
+        Try to get a single :class:`~.bullet.Bullet` from the pipeline, without blocking or handling discards.
 
-        :return: The **returned** :class:`~.events.Event`.
+        :return: The **returned** :class:`~.bullet.Bullet`.
         :raises asyncio.QueueEmpty: If the queue is empty.
         :raises .discard.Discard: If the object was **discarded** by the pipeline.
         :raises Exception: If an exception was **raised** in the pipeline.
@@ -42,23 +42,23 @@ class Sentry(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    async def get(self) -> event.Event:
+    async def get(self) -> bullet.Bullet:
         """
-        Try to get a single :class:`~.events.Event` from the pipeline, blocking until something is available, but
+        Try to get a single :class:`~.bullet.Bullet` from the pipeline, blocking until something is available, but
         without handling discards.
 
-        :return: The **returned** :class:`~.events.Event`.
+        :return: The **returned** :class:`~.bullet.Bullet`.
         :raises .discard.Discard: If the object was **discarded** by the pipeline.
         :raises Exception: If an exception was **raised** in the pipeline.
         """
         raise NotImplementedError()
 
-    async def wait(self) -> event.Event:
+    async def wait(self) -> bullet.Bullet:
         """
-        Try to get a single :class:`~.events.Event` from the pipeline, blocking until something is available and is not
+        Try to get a single :class:`~.bullet.Bullet` from the pipeline, blocking until something is available and is not
         discarded.
 
-        :return: The **returned** :class:`~.events.Event`.
+        :return: The **returned** :class:`~.bullet.Bullet`.
         :raises Exception: If an exception was **raised** in the pipeline.
         """
         while True:
@@ -143,10 +143,10 @@ class SentryFilter(Sentry):
     def __len__(self) -> int:
         return len(self.previous) + 1
 
-    def get_nowait(self) -> event.Event:
+    def get_nowait(self) -> bullet.Bullet:
         return self.previous.get_nowait()
 
-    async def get(self) -> event.Event:
+    async def get(self) -> bullet.Bullet:
         return await self.previous.get()
 
     async def put(self, item) -> None:
@@ -168,14 +168,14 @@ class SentrySource(Sentry):
     def __len__(self) -> int:
         return 1
 
-    def get_nowait(self) -> event.Event:
+    def get_nowait(self) -> bullet.Bullet:
         return self.queue.get_nowait()
 
-    async def get(self) -> event.Event:
+    async def get(self) -> bullet.Bullet:
         return await self.queue.get()
 
     async def put(self, item) -> None:
-        return await self.queue.put(event)
+        return await self.queue.put(bullet)
 
     async def dispenser(self):
         return self._dispenser
