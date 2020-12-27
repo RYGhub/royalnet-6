@@ -67,14 +67,25 @@ class Command:
         """
         The decorator interface of the command.
         """
-        @functools.wraps(f)
+        log.debug("Making function {f} a teleporter...")
+        teleported: t.Callable = teleporter.teleport(is_async=True, validate_output=False)(f)
+
+        @functools.wraps(teleported)
         async def decorated(_msg: bullet.Message, **original_kwargs) -> t.Optional[t.Conversation]:
+            log.debug("Getting message text...")
             text: str = await _msg.text()
+
+            log.debug(f"Matching text {text} to {self.pattern}...")
             match: re.Match = self.pattern.search(text)
+
             if match is None:
+                log.debug(f"Pattern didn't match, returning...")
                 return
+
+            log.debug(f"Pattern matched, getting named groups...")
             match_kwargs: dict = match.groupdict()
-            teleported: t.Callable = teleporter.teleport(is_async=True, validate_output=False)(f)
+
+            log.debug(f"Running teleported function with args: {match_kwargs}")
             return await teleported(_msg=_msg, **original_kwargs, **match_kwargs)
         return decorated
 
