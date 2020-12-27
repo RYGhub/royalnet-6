@@ -28,7 +28,7 @@ class Dispenser:
         """
         log.debug(f"Putting {item}")
         for sentry in self.sentries:
-            sentry.put(item)
+            await sentry.put(item)
 
     @contextlib.contextmanager
     def sentry(self, *args, **kwargs):
