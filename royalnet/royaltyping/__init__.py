@@ -76,4 +76,4 @@ An async generator yielding either:
 """
 
 
-Conversation = Callable[["Sentry"], Awaitable[Optional["Conversation"]]]
+Conversation = Callable[["Sentry", ...], Awaitable[Optional["Conversation"]]]
