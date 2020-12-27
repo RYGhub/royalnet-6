@@ -34,6 +34,7 @@ release = '6.0.0a12'
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
+    'sphinx.ext.todo',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -91,3 +92,7 @@ autodoc_default_options = {
     'special-members': '__init__',
     'undoc-members': True,
 }
+
+# -- Automodule settings -----------------------------------------------------
+
+todo_include_todos = True
