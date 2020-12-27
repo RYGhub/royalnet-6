@@ -11,3 +11,8 @@ class Discard(BaseException):
 
     def __str__(self):
         return f"Discarded {self.obj}: {self.message}"
+
+
+__all__ = (
+    "Discard",
+)

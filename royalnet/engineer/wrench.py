@@ -303,4 +303,5 @@ __all__ = (
     "RegexMatch",
     "RegexReplace",
     "Lambda",
+    "Check",
 )

@@ -49,3 +49,8 @@ class Dispenser:
 
             while True:
                 state = await state
+
+
+__all__ = (
+    "Dispenser",
+)
