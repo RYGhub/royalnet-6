@@ -68,9 +68,11 @@ class Command:
         The decorator interface of the command.
         """
         @functools.wraps(f)
-        async def decorated(_msg: bullet.Message, **original_kwargs) -> t.Conversation:
+        async def decorated(_msg: bullet.Message, **original_kwargs) -> t.Optional[t.Conversation]:
             text: str = await _msg.text()
             match: re.Match = self.pattern.search(text)
+            if match is None:
+                return
             match_kwargs: dict = match.groupdict()
             teleported: t.Callable = teleporter.teleport(is_async=True, validate_output=False)(f)
             return await teleported(_msg=_msg, **original_kwargs, **match_kwargs)
