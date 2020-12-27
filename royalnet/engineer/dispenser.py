@@ -20,7 +20,7 @@ class Dispenser:
         A :class:`list` of all the running sentries of this dispenser.
         """
 
-    def put(self, item: t.Any) -> None:
+    async def put(self, item: t.Any) -> None:
         """
         Insert a new item in the queues of all the running sentries.
 
