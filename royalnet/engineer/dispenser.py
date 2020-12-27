@@ -50,7 +50,7 @@ class Dispenser:
         :param conv: The conversation to run.
         """
         with self.sentry() as sentry:
-            state = conv(sentry)
+            state = conv(_sentry=sentry)
 
             while True:
                 state = await state
