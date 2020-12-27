@@ -44,6 +44,11 @@ class Dispenser:
         self.sentries.remove(sentry)
 
     async def run(self, conv: t.Conversation) -> None:
+        """
+        Run the passed conversation.
+
+        :param conv: The conversation to run.
+        """
         with self.sentry() as sentry:
             state = conv(sentry)
 
