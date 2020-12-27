@@ -1,5 +1,5 @@
 """
-
+Commands are used to quickly create single-message conversations
 """
 
 from __future__ import annotations
@@ -15,7 +15,6 @@ from . import teleporter
 log = logging.getLogger(__name__)
 
 
-# TODO: improve documentation here
 class Command:
     """
     A decorator to create a command that can be called from the chat by entering a certain :attr:`.pattern` of
@@ -53,7 +52,10 @@ class Command:
 
         self.pattern: re.Pattern = re.compile(pattern.format(prefix=prefix, name=name, syntax=syntax))
         """
-        The compiled regex pattern. The defaults can be changed by passing a different ``pattern`` to :meth:`__init__`.
+        The compiled regex pattern. 
+        
+        By default, it :meth:`str.format` the passed string with the ``prefix``, ``name`` and ``syntax`` keyword 
+        arguments, but this behaviour can be changed by passing a different ``pattern`` to :meth:`__init__`.
         """
 
         self.doc: str = doc
