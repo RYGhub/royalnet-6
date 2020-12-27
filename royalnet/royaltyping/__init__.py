@@ -11,6 +11,9 @@ from typing import *
 # noinspection PyUnresolvedReferences
 from typing import IO, TextIO, BinaryIO
 
+if TYPE_CHECKING:
+    from royalnet.engineer import Sentry
+
 
 JSONScalar = Union[
     None,
@@ -76,4 +79,6 @@ An async generator yielding either:
 """
 
 
-Conversation = Callable[["Sentry", ...], Awaitable[Optional["Conversation"]]]
+class Conversation(Protocol):
+    def __call__(self, _sentry: "Sentry", **kwargs) -> Awaitable["Conversation"]:
+        ...
