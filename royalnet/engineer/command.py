@@ -72,7 +72,7 @@ class Command:
             text: str = await _msg.text()
             match: re.Match = self.pattern.search(text)
             match_kwargs: dict = match.groupdict()
-            teleported: t.Callable = teleporter.teleporter(is_async=True, validate_output=False)(f)
+            teleported: t.Callable = teleporter.teleport(is_async=True, validate_output=False)(f)
             return await teleported(_msg=_msg, **original_kwargs, **match_kwargs)
         return decorated
 

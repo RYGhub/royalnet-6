@@ -135,10 +135,10 @@ def teleport_out(__model: type, value: Value) -> Value:
         raise exc.OutTeleporterError(errors=e.raw_errors, model=e.model)
 
 
-def teleporter(__config__: t.Type[pydantic.BaseConfig] = TeleporterConfig,
-               is_async: bool = False,
-               validate_input: bool = True,
-               validate_output: bool = True):
+def teleport(__config__: t.Type[pydantic.BaseConfig] = TeleporterConfig,
+             is_async: bool = False,
+             validate_input: bool = True,
+             validate_output: bool = True):
     """
     A factory that returns a decorator which validates a function's passed arguments and its returned value
     using a :mod:`pydantic` model.
@@ -188,5 +188,5 @@ def teleporter(__config__: t.Type[pydantic.BaseConfig] = TeleporterConfig,
 
 __all__ = (
     "TeleporterConfig",
-    "teleporter",
+    "teleport",
 )
