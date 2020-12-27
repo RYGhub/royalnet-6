@@ -75,3 +75,8 @@ class Command:
             teleported: t.Callable = teleporter.teleporter(is_async=True, validate_output=False)(f)
             return await teleported(_msg=_msg, **original_kwargs, **match_kwargs)
         return decorated
+
+
+__all__ = (
+    "Command",
+)
