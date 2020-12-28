@@ -9,6 +9,7 @@ import logging
 import re
 
 from . import teleporter
+from . import bullet
 
 log = logging.getLogger(__name__)
 
@@ -88,23 +89,26 @@ class Command:
             return cls(prefix=prefix, name=name, syntax=syntax, conversation=teleporter_f, pattern=pattern, doc=doc)
         return decorator
 
-    async def run(self, _text: str, **original_kwargs) -> t.Optional[t.Conversation]:
+    async def run(self, _msg: bullet.Message, **original_kwargs) -> t.Optional[t.Conversation]:
         """
         Run the command.
 
-        :param _text: The text of the message that was received.
+        :param _msg: The the message that was received.
         """
-        log.debug(f"Matching text {_text} to {self.pattern}...")
-        match: re.Match = self.pattern.search(_text)
+        log.debug(f"Getting text of {_msg}...")
+        text = await _msg.text()
+
+        log.debug(f"Matching text {text} to {self.pattern}...")
+        match: re.Match = self.pattern.search(text)
         if match is None:
             log.debug(f"Pattern didn't match, returning...")
             return
 
         log.debug(f"Pattern matched, getting named groups...")
-        match_kwargs: dict = match.groupdict()
+        match_kwargs: t.Dict[str, str] = match.groupdict()
 
         log.debug(f"Running teleported function with args: {match_kwargs}")
-        return await self.conversation(**original_kwargs, **match_kwargs)
+        return await self.conversation(_msg=_msg, **original_kwargs, **match_kwargs)
 
 
 __all__ = (
