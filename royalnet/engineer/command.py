@@ -31,8 +31,9 @@ class Command:
                  prefix: str,
                  name: str,
                  syntax: str,
+                 conversation: t.Conversation,
                  *,
-                 pattern: str = r"^{prefix}{name} {syntax}",
+                 pattern: str = r"^{prefix}{name} ?{syntax}",
                  doc: str = ""):
         self.prefix: str = prefix
         """
@@ -63,31 +64,48 @@ class Command:
         A string explaining how this command should be used. Useful for command lists or help commands.
         """
 
-    def __call__(self, f):
+        self.conversation: t.Conversation = conversation
         """
-        The decorator interface of the command.
+        The conversation to run when this command is called.
         """
-        log.debug("Making function {f} a teleporter...")
-        teleported: t.Callable = teleporter.teleport(is_async=True, validate_output=False)(f)
 
-        @functools.wraps(teleported)
-        async def decorated(_msg: bullet.Message, **original_kwargs) -> t.Optional[t.Conversation]:
-            log.debug("Getting message text...")
-            text: str = await _msg.text()
+    @classmethod
+    def new(cls,
+            prefix: str,
+            name: str,
+            syntax: str,
+            *,
+            pattern: str = r"^{prefix}{name} {syntax}",
+            doc: str = ""):
+        """
+        Create a new :class:`.Command` using the decorated function as :attr:`.conversation`.
+        :return: The created :class:`.Command`.
+        """
+        def decorator(f):
+            log.debug(f"Making function {f} a teleporter...")
+            teleporter_f = teleporter.teleport(is_async=True, validate_output=False)(f)
 
-            log.debug(f"Matching text {text} to {self.pattern}...")
-            match: re.Match = self.pattern.search(text)
+            log.debug(f"Creating command: {prefix} {name} {syntax} - {doc}")
+            return cls(prefix=prefix, name=name, syntax=syntax, conversation=teleporter_f, pattern=pattern, doc=doc)
+        return decorator
 
-            if match is None:
-                log.debug(f"Pattern didn't match, returning...")
-                return
+    async def run(self, _text: str, **original_kwargs) -> t.Optional[t.Conversation]:
+        """
+        Run the command.
 
-            log.debug(f"Pattern matched, getting named groups...")
-            match_kwargs: dict = match.groupdict()
+        :param _text: The text of the message that was received.
+        """
+        log.debug(f"Matching text {_text} to {self.pattern}...")
+        match: re.Match = self.pattern.search(_text)
+        if match is None:
+            log.debug(f"Pattern didn't match, returning...")
+            return
 
-            log.debug(f"Running teleported function with args: {match_kwargs}")
-            return await teleported(_msg=_msg, **original_kwargs, **match_kwargs)
-        return decorated
+        log.debug(f"Pattern matched, getting named groups...")
+        match_kwargs: dict = match.groupdict()
+
+        log.debug(f"Running teleported function with args: {match_kwargs}")
+        return await self.conversation(**original_kwargs, **match_kwargs)
 
 
 __all__ = (
