@@ -10,6 +10,8 @@ import re
 
 from . import teleporter
 from . import bullet
+from . import sentry
+from . import wrench
 
 log = logging.getLogger(__name__)
 
@@ -89,14 +91,15 @@ class Command:
             return cls(prefix=prefix, name=name, syntax=syntax, conversation=teleporter_f, pattern=pattern, doc=doc)
         return decorator
 
-    async def run(self, _msg: bullet.Message, **original_kwargs) -> t.Optional[t.Conversation]:
+    async def run(self, _sentry: sentry.Sentry, **original_kwargs) -> t.Optional[t.Conversation]:
         """
-        Run the command.
+        A conversation which runs the command.
+        """
+        log.debug(f"Waiting for a message...")
+        msg = await (_sentry | wrench.Type(bullet.Message))
 
-        :param _msg: The the message that was received.
-        """
-        log.debug(f"Getting text of {_msg}...")
-        text = await _msg.text()
+        log.debug(f"Getting text of {msg}...")
+        text = await msg.text()
 
         log.debug(f"Matching text {text} to {self.pattern}...")
         match: re.Match = self.pattern.search(text)
@@ -107,8 +110,8 @@ class Command:
         log.debug(f"Pattern matched, getting named groups...")
         match_kwargs: t.Dict[str, str] = match.groupdict()
 
-        log.debug(f"Running teleported function with args: {match_kwargs}")
-        return await self.conversation(_msg=_msg, **original_kwargs, **match_kwargs)
+        log.debug(f"Running teleported function with match kwargs: {match_kwargs}")
+        return await self.conversation(_sentry=_sentry, _msg=msg, **original_kwargs, **match_kwargs)
 
 
 __all__ = (
