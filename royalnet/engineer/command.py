@@ -6,10 +6,8 @@ from __future__ import annotations
 import royalnet.royaltyping as t
 
 import logging
-import functools
 import re
 
-from . import bullet
 from . import teleporter
 
 log = logging.getLogger(__name__)
