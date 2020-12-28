@@ -43,9 +43,21 @@ class BulletException(EngineerException):
     """
 
 
-class NotSupportedError(BulletException, NotImplementedError):
+class FrontendError(BulletException):
+    """
+    An error occoured while performing a frontend operation, such as sending a message.
+    """
+
+
+class NotSupportedError(FrontendError, NotImplementedError):
     """
     The requested property isn't available on the current frontend.
+    """
+
+
+class ForbiddenError(FrontendError):
+    """
+    The bot user does not have sufficient permissions to perform a frontend operation.
     """
 
 
@@ -57,5 +69,7 @@ __all__ = (
     "InTeleporterError",
     "OutTeleporterError",
     "BulletException",
+    "FrontendError",
     "NotSupportedError",
+    "ForbiddenError",
 )
