@@ -7,6 +7,7 @@ import royalnet.royaltyping as t
 
 import logging
 import re
+import asyncio
 
 from . import teleporter
 from . import bullet
@@ -95,8 +96,12 @@ class Command:
         """
         A conversation which runs the command.
         """
-        log.debug(f"Waiting for a message...")
-        msg = await (_sentry | wrench.Type(bullet.Message))
+        log.debug(f"Getting a message from the queue...")
+        try:
+            msg: bullet.Message = (_sentry | wrench.Type(bullet.Message)).get_nowait()
+        except asyncio.QueueEmpty:
+            log.debug(f"No message found in the queue, returning...")
+            return
 
         log.debug(f"Getting text of {msg}...")
         text = await msg.text()

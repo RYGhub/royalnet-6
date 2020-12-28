@@ -30,7 +30,7 @@ class Sentry(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_nowait(self) -> bullet.Bullet:
+    def get_nowait(self):
         """
         Try to get a single :class:`~.bullet.Bullet` from the pipeline, without blocking or handling discards.
 
@@ -42,7 +42,7 @@ class Sentry(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    async def get(self) -> bullet.Bullet:
+    async def get(self):
         """
         Try to get a single :class:`~.bullet.Bullet` from the pipeline, blocking until something is available, but
         without handling discards.
@@ -53,7 +53,7 @@ class Sentry(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
-    async def wait(self) -> bullet.Bullet:
+    async def wait(self):
         """
         Try to get a single :class:`~.bullet.Bullet` from the pipeline, blocking until something is available and is not
         discarded.
@@ -143,10 +143,10 @@ class SentryFilter(Sentry):
     def __len__(self) -> int:
         return len(self.previous) + 1
 
-    def get_nowait(self) -> bullet.Bullet:
+    def get_nowait(self):
         return self.previous.get_nowait()
 
-    async def get(self) -> bullet.Bullet:
+    async def get(self):
         return await self.previous.get()
 
     async def put(self, item) -> None:
@@ -168,10 +168,10 @@ class SentrySource(Sentry):
     def __len__(self) -> int:
         return 1
 
-    def get_nowait(self) -> bullet.Bullet:
+    def get_nowait(self):
         return self.queue.get_nowait()
 
-    async def get(self) -> bullet.Bullet:
+    async def get(self):
         return await self.queue.get()
 
     async def put(self, item) -> None:
