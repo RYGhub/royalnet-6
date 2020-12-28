@@ -52,8 +52,8 @@ class Dispenser:
         with self.sentry() as sentry:
             state = conv(_sentry=sentry)
 
-            while True:
-                state = await state
+            while state := await state:
+                pass
 
 
 __all__ = (
