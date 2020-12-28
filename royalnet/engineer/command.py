@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 class Command:
     """
-    A decorator to create a command that can be called from the chat by entering a certain :attr:`.pattern` of
+    A class that allows creating commands which can be called from the chat by entering a certain :attr:`.pattern` of
     characters:
 
     .. code-block:: text
@@ -23,6 +23,7 @@ class Command:
         /echo Hello!
         # Hello!
 
+    .. todo:: Improve the docstring of :class:`.Command`.
     """
 
     def __init__(self,
