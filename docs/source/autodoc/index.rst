@@ -9,7 +9,6 @@ It may be incomplete or outdated, as it is automatically updated.
    :maxdepth: 3
 
    alchemist
-   campaigns
    engineer
    lazy
    royaltyping
