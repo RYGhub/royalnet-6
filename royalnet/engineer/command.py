@@ -74,7 +74,7 @@ class Command:
     def new(cls,
             prefix: str,
             name: str,
-            syntax: str,
+            syntax: str = "",
             *,
             pattern: str = r"^{prefix}{name}(?: {syntax})?",
             doc: str = ""):
