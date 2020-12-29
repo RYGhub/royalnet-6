@@ -175,7 +175,7 @@ class SentrySource(Sentry):
         return await self.queue.get()
 
     async def put(self, item) -> None:
-        return await self.queue.put(bullet)
+        return await self.queue.put(item)
 
     async def dispenser(self):
         return self._dispenser
