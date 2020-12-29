@@ -76,7 +76,7 @@ class Command:
             name: str,
             syntax: str,
             *,
-            pattern: str = r"^{prefix}{name} {syntax}",
+            pattern: str = r"^{prefix}{name}(?: {syntax})?",
             doc: str = ""):
         """
         Create a new :class:`.Command` using the decorated function as :attr:`.conversation`.
