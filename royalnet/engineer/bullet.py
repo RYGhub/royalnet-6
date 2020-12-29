@@ -1,5 +1,5 @@
 """
-
+Bullets are parts of the data model
 """
 
 from __future__ import annotations
