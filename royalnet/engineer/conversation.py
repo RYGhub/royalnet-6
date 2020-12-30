@@ -54,6 +54,7 @@ class Conversation:
         def decorator(f: ConversationProtocol):
             c = cls(f=f, *args, **kwargs)
             log.debug(f"Created: {c!r}")
+            return c
         return decorator
 
     def __call__(self, *, _sentry: s.Sentry, **kwargs) -> t.Awaitable[t.Optional[ConversationProtocol]]:

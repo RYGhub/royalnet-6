@@ -30,6 +30,11 @@ class Command(c.Conversation):
     def __init__(self, f: c.ConversationProtocol, *, name: str, pattern: re.Pattern):
         super().__init__(f)
 
+        if not name.isalnum():
+            raise ValueError("Name should be alphanumeric")
+        if not name.islower():
+            raise ValueError("Name should be lowercase")
+
         self.name: str = name
         """
         The name of the command, as a :class:`str`.
@@ -65,7 +70,7 @@ class Command(c.Conversation):
         message_kwargs: t.Dict[str, str] = match.groupdict()
         
         log.debug(f"Passing args to function: {message_kwargs!r}")
-        return await super().run(_sentry=_sentry, **base_kwargs, **message_kwargs)
+        return await super().run(_sentry=_sentry, _msg=bullet, **base_kwargs, **message_kwargs)
 
     def help(self) -> t.Optional[str]:
         """
@@ -91,9 +96,9 @@ class PartialCommand:
         The function to pass to :attr:`.c.Conversation.f`.
         """
 
-        if not self.name.isalnum():
+        if not name.isalnum():
             raise ValueError("Name should be alphanumeric")
-        if not self.name.islower():
+        if not name.islower():
             raise ValueError("Name should be lowercase")
 
         self.name: str = name
@@ -118,6 +123,8 @@ class PartialCommand:
         def decorator(f: c.ConversationProtocol):
             partial_command = cls(f=f, *args, **kwargs)
             log.debug(f"Created: {partial_command!r}")
+            return partial_command
+
         return decorator
 
     def complete(self, pattern: str) -> Command:
