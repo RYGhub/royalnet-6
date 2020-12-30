@@ -5,7 +5,7 @@ All names are inspired by the `Engineer Class of Team Fortress 2 <https://wiki.t
 """
 
 from .bullet import *
-from .command import *
+from .conversation import *
 from .discard import *
 from .dispenser import *
 from .exc import *

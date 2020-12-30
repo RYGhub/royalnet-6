@@ -10,10 +10,10 @@
 .. automodule:: royalnet.engineer.bullet
 
 
-``command``
+``conversation``
 -----------
 
-.. automodule:: royalnet.engineer.command
+.. automodule:: royalnet.engineer.conversation
 
 
 ``dispenser``
