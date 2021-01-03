@@ -15,6 +15,7 @@ import re
 from . import conversation as c
 from . import sentry as s
 from . import bullet as b
+from . import teleporter as tp
 
 # Special global objects
 log = logging.getLogger(__name__)
@@ -27,23 +28,43 @@ class Command(c.Conversation):
     the :attr:`.pattern`; the named capture groups of the pattern are then passed as keyword arguments to :attr:`.f`.
     """
 
-    def __init__(self, f: c.ConversationProtocol, *, name: str, pattern: re.Pattern):
-        super().__init__(f)
+    def __init__(self, f: c.ConversationProtocol, *, names: t.List[str] = None, pattern: re.Pattern):
+        log.debug(f"Teleporting function: {f!r}")
+        teleported = tp.Teleporter(f, validate_input=True, validate_output=False)
 
-        if not name.isalnum():
-            raise ValueError("Name should be alphanumeric")
-        if not name.islower():
-            raise ValueError("Name should be lowercase")
+        log.debug(f"Initializing Conversation with: {teleported!r}")
+        super().__init__(teleported)
 
-        self.name: str = name
+        self.names: t.List[str] = names if names else []
         """
-        The name of the command, as a :class:`str`.
+        The names of the command, as a :class:`list` of :class:`str`.
+        
+        The first element of the list is the "main" name, and will be displayed in help messages.
         """
 
         self.pattern: re.Pattern = pattern
         """
         The pattern that should be matched by the command.
         """
+
+    def name(self):
+        """
+        :return: The main name of the Command.
+        """
+        return self.names[0]
+
+    def aliases(self):
+        """
+        :return: The aliases (non-main names) of the Command.
+        """
+        return self.names[1:]
+
+    def __repr__(self):
+        if (nc := len(self.names)) > 1:
+            plus = f" + {nc-1} other names"
+        else:
+            plus = ""
+        return f"<{self.__class__.__qualname__}: {self.name()!r}{plus}>"
 
     async def run(self, *, _sentry: s.Sentry, **base_kwargs) -> t.Optional[c.ConversationProtocol]:
         log.debug(f"Awaiting a bullet...")
@@ -80,31 +101,18 @@ class Command(c.Conversation):
         """
         return self.f.__doc__
 
-    def __repr__(self):
-        return f"<{self.__class__.__qualname__}: {self.name}>"
-
 
 class PartialCommand:
     """
-    A PartialCommand is a :class:`.Command` having an unknown :attr:`~.Command.pattern` at the moment of creation.
+    A PartialCommand is a :class:`.Command` having an unknown :attr:`~.Command.name` and :attr:`~.Command.pattern` at
+    the moment of creation.
 
-    The pattern can specified later using :meth:`.complete`.
+    They can specified later using :meth:`.complete`.
     """
-    def __init__(self, f: c.ConversationProtocol, name: str, syntax: str):
+    def __init__(self, f: c.ConversationProtocol, syntax: str):
         self.f: c.ConversationProtocol = f
         """
         The function to pass to :attr:`.c.Conversation.f`.
-        """
-
-        if not name.isalnum():
-            raise ValueError("Name should be alphanumeric")
-        if not name.islower():
-            raise ValueError("Name should be lowercase")
-
-        self.name: str = name
-        """
-        The name of the command to pass to :attr`.Command.name`. Should be lowercase and containing only alphanumeric 
-        characters.
         """
 
         self.syntax: str = syntax
@@ -127,19 +135,30 @@ class PartialCommand:
 
         return decorator
 
-    def complete(self, pattern: str) -> Command:
+    def complete(self, *, names: t.List[str] = None, pattern: str) -> Command:
         """
         Complete the PartialCommand with a pattern, creating a :class:`Command` object.
 
+        :param names: The names of the command. See :attr:`.Command.names` .
         :param pattern: The pattern to add to the PartialCommand. It is first :meth:`str.format`\\ ted with the keyword
-                        arguments ``name=self.name, syntax=self.syntax`` and later :func:`re.compile`\\ d.
+                        arguments ``name`` and ``syntax`` and later :func:`re.compile`\\ d with the
+                        :const:`re.IGNORECASE` flag.
         :return: The complete :class:`Command`.
         """
-        pattern: re.Pattern = re.compile(pattern.format(name=self.name, syntax=self.syntax))
-        return Command(f=self.f, name=self.name, pattern=pattern)
+        if names is None:
+            names = []
+        if len(names) < 1:
+            raise ValueError("Commands must have at least one name.")
+        for name in names:
+            if not name.isalnum():
+                raise ValueError(f"Name is not alphanumeric: {name!r}")
+
+        name_regex = f"(?:{'|'.join(names)})"
+        pattern: re.Pattern = re.compile(pattern.format(name=name_regex, syntax=self.syntax), re.IGNORECASE)
+        return Command(f=self.f, names=names, pattern=pattern)
 
     def __repr__(self):
-        return f"<{self.__class__.__qualname__}: {self.name}>"
+        return f"<{self.__class__.__qualname__} {self.f!r}>"
 
 
 # Objects exported by this module

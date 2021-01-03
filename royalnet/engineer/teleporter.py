@@ -8,7 +8,6 @@ import royalnet.royaltyping as t
 import logging
 import pydantic
 import inspect
-import functools
 
 from . import exc
 
@@ -16,177 +15,225 @@ Value = t.TypeVar("Value")
 log = logging.getLogger(__name__)
 
 
-class TeleporterConfig(pydantic.BaseConfig):
-    """
-    A :mod:`pydantic` model config which allows for arbitrary types.
-    """
-    arbitrary_types_allowed = True
+class Teleporter:
+    def __init__(self,
+                 f: t.Callable[..., t.Any],
+                 validate_input: bool = True,
+                 validate_output: bool = True):
+        self.f: t.Callable = f
+        self.InputModel: t.Type[pydantic.BaseModel] = self._create_input_model() if validate_input else None
+        self.OutputModel: t.Type[pydantic.BaseModel] = self._create_output_model() if validate_output else None
 
+    def __repr__(self):
+        if self.InputModel and self.OutputModel:
+            validation = "validating input and output"
+        elif self.InputModel:
+            validation = "validating only input"
+        elif self.OutputModel:
+            validation = "validating only output"
+        else:
+            validation = "not validating anything"
+        return f"<{self.__class__.__qualname__} {validation}>"
 
-def parameter_to_field(param: inspect.Parameter, **kwargs) -> t.Tuple[type, pydantic.fields.FieldInfo]:
-    """
-    Convert a :class:`inspect.Parameter` to a type-field :class:`tuple`, which can be easily passed to
-    :func:`pydantic.create_model`.
+    @staticmethod
+    def _parameter_to_field(param: inspect.Parameter, **kwargs) -> t.Tuple[type, pydantic.fields.FieldInfo]:
+        """
+        Convert a :class:`inspect.Parameter` to a type-field :class:`tuple`, which can be easily passed to
+        :func:`pydantic.create_model`.
 
-    If the parameter is already a :class:`pydantic.FieldInfo` (created by :func:`pydantic.Field`), it will be
-    returned as the value, without creating a new model.
+        If the parameter is already a :class:`pydantic.FieldInfo` (created by :func:`pydantic.Field`), it will be
+        returned as the value, without creating a new model.
 
-    :param param: The :class:`inspect.Parameter` to convert.
-    :param kwargs: Additional kwargs to pass to the field.
-    :return: A :class:`tuple`, where the first element is a :class:`type` and the second is a :class:`pydantic.Field`.
-    """
-    if isinstance(param.default, pydantic.fields.FieldInfo):
-        return (
-            param.annotation,
-            param.default
+        :param param: The :class:`inspect.Parameter` to convert.
+        :param kwargs: Additional kwargs to pass to the field.
+        :return: A :class:`tuple`, where the first element is a :class:`type` and the second is a
+                 :class:`pydantic.Field`.
+        """
+        if isinstance(param.default, pydantic.fields.FieldInfo):
+            log.debug(f"Parameter {param} is a pydantic.Field, leaving it untouched...")
+            return (
+                param.annotation,
+                param.default
+            )
+        else:
+            log.debug(f"Parameter {param} is not a pydantic.Field, converting it to one...")
+            return (
+                param.annotation,
+                pydantic.Field(
+                    default=param.default if param.default is not inspect.Parameter.empty else ...,
+                    title=param.name,
+                    **kwargs,
+                ),
+            )
+
+    class TeleporterDefaultConfig(pydantic.BaseConfig):
+        """
+        A :mod:`pydantic` model config which allows for arbitrary types.
+        """
+        arbitrary_types_allowed = True
+
+    def get_model_config(self):
+        """
+        Get the :mod:`pydantic` config to use in both input and output, if :meth:`.get_input_model_config` and
+        :meth:`.get_output_model_config` are not overridden.
+
+        :return: A :mod:`pydantic` config.
+        """
+        log.debug("Getting default model config...")
+        return self.TeleporterDefaultConfig
+
+    def get_input_model_config(self):
+        """
+        Get the :mod:`pydantic` config to use while creating input models.
+
+        :return: A :mod:`pydantic` config.
+        """
+        log.debug("Getting common model config...")
+        return self.get_model_config()
+
+    def get_output_model_config(self):
+        """
+        Get the :mod:`pydantic` config to use while creating output models.
+
+        :return: A :mod:`pydantic` config.
+        """
+        log.debug("Getting common model config...")
+        return self.get_model_config()
+
+    def _create_input_model(self,
+                            **extra_fields) -> t.Type[pydantic.BaseModel]:
+        """
+        Create a pydantic model based on the arguments of the :attr:`f` function.
+
+        Arguments starting with ``_`` are ignored.
+
+        The model is created using the config obtained through :meth:`.get_input_model_config` .
+
+        :param extra_fields: Extra fields to be added to the model.
+        :return: The created pydantic model.
+        """
+        log.debug(f"Getting function signature of: {self.f!r}")
+        signature: inspect.Signature = inspect.signature(self.f)
+
+        log.debug(f"Converting parameter annotations of {self.f!r} to fields...")
+        fields = {
+            key: self._parameter_to_field(value)
+            for key, value in signature.parameters.items()
+            if not key.startswith("_")
+        }
+
+        log.debug(f"Creating input model with parsed fields {fields!r} and extra fields {extra_fields!r}...")
+        return pydantic.create_model(
+            f"{self.__class__.__name__}InputModel",
+            __config__=self.get_input_model_config(),
+            **fields,
+            **extra_fields
         )
-    else:
-        return (
-            param.annotation,
-            pydantic.Field(
-                default=param.default if param.default is not inspect.Parameter.empty else ...,
-                title=param.name,
-                **kwargs,
-            ),
+
+    def _create_output_model(self) -> t.Type[pydantic.BaseModel]:
+        """
+        Create a pydantic model based on the return value of the :attr:`f` function.
+
+        The model is created using the config obtained through :meth:`.get_output_model_config` .
+
+        :return: The created pydantic model.
+        """
+        log.debug(f"Getting function signature of: {self.f!r}")
+        signature: inspect.Signature = inspect.signature(self.f)
+
+        log.debug(f"Creating output model...")
+        return pydantic.create_model(
+            f"{self.__class__.__name__}OutputModel",
+            __config__=self.get_output_model_config(),
+            __root__=(signature.return_annotation, pydantic.Field(..., title="Returns"))
         )
 
+    def teleport_in(self, **kwargs) -> pydantic.BaseModel:
+        """
+        Instantiate the :attr:`.InputModel` with the passed kwargs.
 
-def signature_to_model(f: t.Callable,
-                       __config__: t.Type[pydantic.BaseConfig] = TeleporterConfig,
-                       extra_params: t.Dict[str, type] = None) -> t.Tuple[type, type]:
-    """
-    Convert the signature of a function to two pydantic models: one for the input and another one for the output.
+        :param kwargs: The keyword arguments that should be passed to the model.
+        :return: The created model.
+        :raises .exc.InTeleporterError: If the kwargs fail the validation.
+        """
+        log.debug(f"Teleporting in: {kwargs!r}")
+        try:
+            return self.InputModel(**kwargs)
+        except pydantic.ValidationError as e:
+            log.error(f"Teleport in failed: {e!r}")
+            raise exc.InTeleporterError(errors=e.raw_errors, model=e.model)
 
-    Arguments starting with ``_`` are ignored.
+    def teleport_out(self, value: Value) -> pydantic.BaseModel:
+        """
+        Instantiate the :attr:`.OutputModel` with the passed value.
 
-    :param f: The function to use the signature of.
-    :param __config__: The config the pydantic model should use.
-    :param extra_params: Extra parameters to be added to the model.
-    :return: A tuple consisting of the input model and the output model.
-    """
-    if extra_params is None:
+        :param value: The value that should be validated.
+        :return: The created model.
+        :raises .exc.OutTeleporterError: If the value fails the validation.
+        """
+        log.debug(f"Teleporting out: {value!r}")
+        try:
+            return self.OutputModel(__root__=value)
+        except pydantic.ValidationError as e:
+            log.error(f"Teleport out failed: {e!r}")
+            raise exc.OutTeleporterError(errors=e.raw_errors, model=e.model)
+
+    @staticmethod
+    def _split_kwargs(**kwargs) -> t.Tuple[t.Dict[str, t.Any], t.Dict[str, t.Any]]:
+        """
+        Split the passed kwargs in two different :class:`dict`:
+        - One containing the arguments that **do not start with ``_``**;
+        - Another containing the ones which do.
+
+        :return: A tuple of :class:`dict`, where the second contains the ones starting with ``_``, and the first
+                 contains the rest.
+        """
+        model_params = {}
         extra_params = {}
+        for key, value in kwargs.items():
+            if key.startswith("_"):
+                log.debug(f"Found extra keyword argument: {key}")
+                extra_params[key] = value
+            else:
+                log.debug(f"Found model keyword argument: {key}")
+                model_params[key] = value
+        return model_params, extra_params
 
-    signature: inspect.Signature = inspect.signature(f)
+    def _run(self, **kwargs) -> t.Any:
+        """
+        Run the teleporter synchronously.
+        """
+        if self.InputModel:
+            log.debug("Validating input...")
+            model_kwargs, extra_kwargs = self._split_kwargs(**kwargs)
+            model_kwargs = self.teleport_in(**kwargs).dict()
+            kwargs = {**model_kwargs, **extra_kwargs}
+        result = self.f(**kwargs)
+        if self.OutputModel:
+            result = self.teleport_out(result).__root__
+        return result
 
-    model_params = {
-        key: parameter_to_field(value)
-        for key, value in signature.parameters.items()
-        if not key.startswith("_")
-    }
+    async def _run_async(self, **kwargs) -> t.Awaitable[t.Any]:
+        """
+        Run the teleporter asynchronously.
+        """
+        if self.InputModel:
+            log.debug("Validating input...")
+            model_kwargs, extra_kwargs = self._split_kwargs(**kwargs)
+            model_kwargs = self.teleport_in(**kwargs).dict()
+            kwargs = {**model_kwargs, **extra_kwargs}
+        result = await self.f(**kwargs)
+        if self.OutputModel:
+            result = self.teleport_out(result).__root__
+        return result
 
-    input_model = pydantic.create_model(f"{f.__name__}Input",
-                                        __config__=TeleporterConfig,
-                                        **model_params,
-                                        **extra_params)
-    output_model = pydantic.create_model(f"{f.__name__}Output",
-                                         __config__=TeleporterConfig,
-                                         __root__=(signature.return_annotation, pydantic.Field(..., title="Returns")))
-
-    return input_model, output_model
-
-
-def split_kwargs(**kwargs) -> t.Tuple[t.Dict[str, t.Any], t.Dict[str, t.Any]]:
-    """
-    Split the kwargs passed to this function in two different :class:`dict`, based on whether their name starts with
-    ``_`` or not.
-
-    :return: A tuple of :class:`dict`, where the second contains the ones starting with ``_``, and the first contains
-             the rest.
-    """
-    model_params = {}
-    extra_params = {}
-    for key, value in kwargs.items():
-        if key.startswith("__"):
-            raise ValueError("A keyword argument has a key that starts with __.")
-        elif key.startswith("_"):
-            extra_params[key] = value
+    def __call__(self, **kwargs) -> t.Any:
+        if inspect.iscoroutinefunction(self.f):
+            return self._run_async(**kwargs)
         else:
-            model_params[key] = value
-    return model_params, extra_params
-
-
-def teleport_in(__model: type, **kwargs):
-    """
-    Validate the kwargs passed to this function through the passed :mod:`pydantic` ``__model``.
-
-    :param __model: The model that should be used to validate the kwargs.
-    :return: The created model.
-    :raises .exc.InputValidationError: If the kwargs fail the validation.
-    """
-    try:
-        return __model(**kwargs)
-    except pydantic.ValidationError as e:
-        raise exc.InTeleporterError(errors=e.raw_errors, model=e.model)
-
-
-def teleport_out(__model: type, value: Value) -> Value:
-    """
-    Validate a single value passed to this function through the ``__root__`` of the passed :mod:`pydantic` ``__model``.
-
-    :param __model: The model that should be used to validate the value.
-    :param value: The value that should be validated.
-    :return: The value passed as result, after being unwrapped from the created model.
-    :raises .exc.OutputValidationError: If the value fails the validation.
-    """
-    try:
-        return __model(__root__=value).__root__
-    except pydantic.ValidationError as e:
-        raise exc.OutTeleporterError(errors=e.raw_errors, model=e.model)
-
-
-def teleport(__config__: t.Type[pydantic.BaseConfig] = TeleporterConfig,
-             is_async: bool = False,
-             validate_input: bool = True,
-             validate_output: bool = True):
-    """
-    A factory that returns a decorator which validates a function's passed arguments and its returned value
-    using a :mod:`pydantic` model.
-
-    .. warning:: By using this, the function will stop accepting positional arguments, and will only accept
-                 keyword arguments.
-
-    :param __config__: The config the pydantic model should use.
-    :param is_async: Whether the decorated function is async or not.
-    :param validate_input: Whether the input parameters should be validated or not.
-    :param validate_output: Whether the return value should be validated or not.
-    :return: The decorator to validate the input.
-
-    .. seealso:: :func:`.signature_to_model`
-    """
-    def decorator(f: t.Callable):
-        # noinspection PyPep8Naming
-        InputModel, OutputModel = signature_to_model(f, __config__=__config__)
-
-        if is_async:
-            @functools.wraps(f)
-            async def decorated(**kwargs):
-                if validate_input:
-                    model_kwargs, extra_kwargs = split_kwargs(**kwargs)
-                    model_kwargs = teleport_in(__model=InputModel, **kwargs).dict()
-                    kwargs = {**model_kwargs, **extra_kwargs}
-                result = await f(**kwargs)
-                if validate_output:
-                    result = teleport_out(__model=OutputModel, value=result)
-                return result
-        else:
-            @functools.wraps(f)
-            def decorated(**kwargs):
-                if validate_input:
-                    model_kwargs, extra_kwargs = split_kwargs(**kwargs)
-                    model_kwargs = teleport_in(__model=InputModel, **kwargs).dict()
-                    kwargs = {**model_kwargs, **extra_kwargs}
-                result = f(**kwargs)
-                if validate_output:
-                    result = teleport_out(__model=OutputModel, value=result)
-                return result
-
-        return decorated
-
-    return decorator
+            return self._run(**kwargs)
 
 
 __all__ = (
-    "TeleporterConfig",
-    "teleport",
+    "Teleporter"
 )
