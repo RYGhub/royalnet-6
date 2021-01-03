@@ -9,6 +9,7 @@ import logging
 import contextlib
 
 from .sentry import SentrySource
+from .conversation import Conversation
 
 log = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ class Dispenser:
         log.debug(f"Removing from the sentries list: {sentry}")
         self.sentries.remove(sentry)
 
-    async def run(self, conv: t.Conversation) -> None:
+    async def run(self, conv: Conversation, **kwargs) -> None:
         """
         Run the passed conversation.
 
@@ -56,7 +57,7 @@ class Dispenser:
         """
         log.debug(f"Running: {conv}")
         with self.sentry() as sentry:
-            state = conv(_sentry=sentry)
+            state = conv(_sentry=sentry, **kwargs)
 
             log.debug(f"First state: {state}")
             while state := await state:
