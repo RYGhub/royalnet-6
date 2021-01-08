@@ -12,6 +12,8 @@ it is available.
 - :data:`None` is returned, meaning that there is no data in that field (if a message is not a reply to anything,
   :meth:`Message.reply_to` will be :data:`None`.
 - The data is returned.
+
+To instantiate a new :class:`Bullet` from a bullet, you should use the methods of :attr:`.Bullet.mag`.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ import royalnet.royaltyping as t
 import abc
 import datetime
 import sqlalchemy.orm
+import io
 
 from . import exc
 
