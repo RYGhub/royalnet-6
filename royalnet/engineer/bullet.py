@@ -22,7 +22,6 @@ import royalnet.royaltyping as t
 import abc
 import datetime
 import sqlalchemy.orm
-import io
 
 from . import exc
 
@@ -86,7 +85,7 @@ class Message(Bullet, metaclass=abc.ABCMeta):
 
     async def send_reply(self, *,
                          text: str = None,
-                         files: t.List[t.BinaryIO]) -> t.Optional[Message]:
+                         files: t.List[t.BinaryIO] = None) -> t.Optional[Message]:
         """
         Reply to this message in the same channel it was sent in.
 
@@ -124,7 +123,7 @@ class Channel(Bullet, metaclass=abc.ABCMeta):
 
     async def send_message(self, *,
                            text: str = None,
-                           files: t.List[t.BinaryIO]) -> t.Optional[Message]:
+                           files: t.List[t.BinaryIO] = None) -> t.Optional[Message]:
         """
         Send a message in the channel.
 
@@ -157,7 +156,7 @@ class User(Bullet, metaclass=abc.ABCMeta):
 
     async def send_message(self, *,
                            text: str = None,
-                           files: t.List[t.BinaryIO]) -> t.Optional[Message]:
+                           files: t.List[t.BinaryIO] = None) -> t.Optional[Message]:
         """
         Send a private message to the user.
 
