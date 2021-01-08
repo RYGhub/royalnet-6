@@ -23,11 +23,20 @@ import sqlalchemy.orm
 
 from . import exc
 
+if t.TYPE_CHECKING:
+    from . import magazine
+
 
 class Bullet(metaclass=abc.ABCMeta):
     """
     The abstract base class for Bullet models.
     """
+
+    def __init__(self, mag: "magazine.Magazine"):
+        self.mag: "magazine.Magazine" = mag
+        """
+        The :class:`.magazine.Magazine` to use when instantiating new :class:`.Bullet`\\ s.
+        """
 
     @abc.abstractmethod
     def __hash__(self) -> int:
