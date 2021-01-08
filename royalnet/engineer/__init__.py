@@ -12,6 +12,7 @@ from .conversation import *
 from .discard import *
 from .dispenser import *
 from .exc import *
+from .magazine import *
 from .sentry import *
 from .teleporter import *
 from .wrench import *
