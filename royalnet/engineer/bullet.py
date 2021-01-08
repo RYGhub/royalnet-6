@@ -78,11 +78,22 @@ class Message(Bullet, metaclass=abc.ABCMeta):
         """
         raise exc.NotSupportedError()
 
-    async def send_reply(self, text: str) -> t.Optional[Message]:
+    async def files(self) -> t.Optional[t.List[t.BinaryIO]]:
         """
-        Send a reply to this message in the same channel.
+        :return: A :class:`list` of files attached to the message.
+        """
+        raise exc.NotSupportedError()
+
+    async def send_reply(self, *,
+                         text: str = None,
+                         files: t.List[t.BinaryIO]) -> t.Optional[Message]:
+        """
+        Reply to this message in the same channel it was sent in.
 
         :param text: The text to reply with.
+        :param files: A :class:`list` of files to attach to the message. The file type should be detected automatically
+                      by the frontend, and sent in the best format possible (if all files are photos, they should be
+                      sent as a photo album, etc.).
         :return: The sent reply message.
         """
         raise exc.NotSupportedError()
@@ -111,11 +122,16 @@ class Channel(Bullet, metaclass=abc.ABCMeta):
         """
         raise exc.NotSupportedError()
 
-    async def send_message(self, text: str) -> t.Optional[Message]:
+    async def send_message(self, *,
+                           text: str = None,
+                           files: t.List[t.BinaryIO]) -> t.Optional[Message]:
         """
         Send a message in the channel.
 
         :param text: The text to send in the message.
+        :param files: A :class:`list` of files to attach to the message. The file type should be detected automatically
+                      by the frontend, and sent in the best format possible (if all files are photos, they should be
+                      sent as a photo album, etc.).
         :return: The sent message.
         """
         raise exc.NotSupportedError()
@@ -139,11 +155,16 @@ class User(Bullet, metaclass=abc.ABCMeta):
         """
         raise exc.NotSupportedError()
 
-    async def send_message(self, text: str) -> t.Optional[Message]:
+    async def send_message(self, *,
+                           text: str = None,
+                           files: t.List[t.BinaryIO]) -> t.Optional[Message]:
         """
         Send a private message to the user.
 
         :param text: The text to send in the message.
+        :param files: A :class:`list` of files to attach to the message. The file type should be detected automatically
+                      by the frontend, and sent in the best format possible (if all files are photos, they should be
+                      sent as a photo album, etc.).
         :return: The sent message.
         """
         raise exc.NotSupportedError()
