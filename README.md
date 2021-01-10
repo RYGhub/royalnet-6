@@ -8,7 +8,8 @@ The documentation is [hosted on Read The Docs](https://royalnet-6.readthedocs.io
 
 ### PDA implementations
 
-- [royalnet-discordpy](https://github.com/Steffo99/royalnet-discordpy)
+- [royalnet-discordpy](https://github.com/Steffo99/royalnet-discordpy) (based on a Discord Bot)
+- [royalnet-console](https://github.com/Steffo99/royalnet-console) (based on a terminal session)
 
 ### Old Royalnet versions
 
