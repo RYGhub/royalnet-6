@@ -235,5 +235,5 @@ class Teleporter:
 
 
 __all__ = (
-    "Teleporter"
+    "Teleporter",
 )
