@@ -17,7 +17,7 @@
 
 
 ``conversation``
------------
+----------------
 
 .. automodule:: royalnet.engineer.conversation
 
@@ -32,6 +32,7 @@
 ----------
 
 .. automodule:: royalnet.engineer.sentry
+   :special-members: __or__
 
 
 ``teleporter``
@@ -43,7 +44,7 @@
 ``wrench``
 ----------
 
-.. automodule:: royalnet.engineer.sentry
+.. automodule:: royalnet.engineer.wrench
 
 
 ``discard``

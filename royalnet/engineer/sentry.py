@@ -1,5 +1,5 @@
 """
-Sentries are asyncronous receivers for events (usually :class:`bullet.Bullet`) incoming from Dispensers.
+Sentries are asynchronous receivers for events (usually :class:`bullet.Bullet`) incoming from Dispensers.
 
 They support event filtering through Wrenches and coroutine functions.
 """
@@ -12,7 +12,6 @@ import logging
 import asyncio
 
 from . import discard
-from . import bullet
 
 if t.TYPE_CHECKING:
     from .dispenser import Dispenser

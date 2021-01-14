@@ -6,9 +6,10 @@ They exclusively use coroutine functions to access data, as it may be required t
 it is available.
 
 **All** coroutine functions can have three different results:
+
 - :exc:`.exc.BulletException` is raised, meaning that something went wrong during the data retrieval.
-    - :exc:`.exc.NotSupportedError` is raised, meaning that the frontend does not support the feature the requested data
-      is about (asking for :meth:`.Message.reply_to` in an IRC frontend, for example).
+  - :exc:`.exc.NotSupportedError` is raised, meaning that the frontend does not support the feature the requested data
+    is about (asking for :meth:`.Message.reply_to` in an IRC frontend, for example).
 - :data:`None` is returned, meaning that there is no data in that field (if a message is not a reply to anything,
   :meth:`Message.reply_to` will be :data:`None`.
 - The data is returned.
@@ -31,10 +32,14 @@ if t.TYPE_CHECKING:
 
 class Bullet(metaclass=abc.ABCMeta):
     """
-    The abstract base class for Bullet models.
+    The abstract base class for :mod:`~royalnet.engineer.bullet` models.
     """
 
     def __init__(self, mag: "magazine.Magazine"):
+        """
+        Instantiate a new :class:`.Bullet` .
+        """
+
         self.mag: "magazine.Magazine" = mag
         """
         The :class:`.magazine.Magazine` to use when instantiating new :class:`.Bullet`\\ s.

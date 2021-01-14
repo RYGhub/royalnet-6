@@ -63,9 +63,9 @@ class Conversation:
 
     async def run(self, *, _sentry: s.Sentry, **kwargs) -> t.Optional[ConversationProtocol]:
         """
-        The coroutine function that generates the coroutines returned by :meth:`__call__` .
+        The coroutine function that generates the coroutines returned by :meth:`.__call__` .
 
-        It is a conversation itself.
+        It is a :class:`Conversation` itself.
         """
         log.debug(f"Running: {self!r}")
         return await self.f(_sentry=_sentry, **kwargs)

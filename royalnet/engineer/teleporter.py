@@ -21,8 +21,19 @@ class Teleporter:
                  validate_input: bool = True,
                  validate_output: bool = True):
         self.f: t.Callable = f
+        """
+        The function which is having its parameters and return value validated.
+        """
+
         self.InputModel: t.Type[pydantic.BaseModel] = self._create_input_model() if validate_input else None
+        """
+        The :mod:`pydantic` model used to validate input parameters.
+        """
+
         self.OutputModel: t.Type[pydantic.BaseModel] = self._create_output_model() if validate_output else None
+        """
+        The :mod:`pydantic` model used to validate the return value.
+        """
 
     def __repr__(self):
         if self.InputModel and self.OutputModel:

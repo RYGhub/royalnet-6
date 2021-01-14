@@ -24,11 +24,18 @@ log = logging.getLogger(__name__)
 # Code
 class Command(c.Conversation):
     """
-    A Command is a :class:`~.c.Conversation` which is started by a :class:`~.b.Message` having a text matching
-    the :attr:`.pattern`; the named capture groups of the pattern are then passed as keyword arguments to :attr:`.f`.
+    A Command is a :class:`~.conversation.Conversation` which is started by a :class:`~.bullet.Message` having a text
+    matching the :attr:`.pattern`; the named capture groups of the pattern are then passed as keyword arguments to
+    :attr:`.f`.
+
+    .. info:: Usually you don't directly instantiate commands, you define :class:`.PartialCommand`\\ s in packs which
+              are later completed by a runner.
     """
 
     def __init__(self, f: c.ConversationProtocol, *, names: t.List[str] = None, pattern: re.Pattern):
+        """
+        Create a new :class:`.Command` .
+        """
         log.debug(f"Teleporting function: {f!r}")
         teleported = tp.Teleporter(f, validate_input=True, validate_output=False)
 
@@ -95,7 +102,7 @@ class Command(c.Conversation):
 
     def help(self) -> t.Optional[str]:
         """
-        Get help about this command. This defaults to returning the docstring of :field:`.f` .
+        Get help about this command. This defaults to returning the docstring of :attr:`.f` .
 
         :return: The help :class:`str` for this command, or :data:`None` if the command has no docstring.
         """
@@ -110,6 +117,12 @@ class PartialCommand:
     They can specified later using :meth:`.complete`.
     """
     def __init__(self, f: c.ConversationProtocol, syntax: str):
+        """
+        Create a new :class:`.PartialCommand` .
+
+        .. seealso:: :meth:`.new`
+        """
+
         self.f: c.ConversationProtocol = f
         """
         The function to pass to :attr:`.c.Conversation.f`.
@@ -137,12 +150,12 @@ class PartialCommand:
 
     def complete(self, *, names: t.List[str] = None, pattern: str) -> Command:
         """
-        Complete the PartialCommand with a pattern, creating a :class:`Command` object.
+        Complete the :class:`.PartialCommand` with names and a pattern, creating a :class:`Command` object.
 
         :param names: The names of the command. See :attr:`.Command.names` .
-        :param pattern: The pattern to add to the PartialCommand. It is first :meth:`str.format`\\ ted with the keyword
-                        arguments ``name`` and ``syntax`` and later :func:`re.compile`\\ d with the
-                        :const:`re.IGNORECASE` flag.
+        :param pattern: The pattern to add to the PartialCommand. It is first :meth:`~str.format`\\ ted with the keyword
+                        arguments ``name`` and ``syntax`` and later :func:`~re.compile`\\ d with the
+                        :data:`re.IGNORECASE` flag.
         :return: The complete :class:`Command`.
         """
         if names is None:
