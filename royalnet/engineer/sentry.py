@@ -15,6 +15,7 @@ from . import discard
 
 if t.TYPE_CHECKING:
     from .dispenser import Dispenser
+    from .conversation import Conversation
 
 log = logging.getLogger(__name__)
 
@@ -114,7 +115,7 @@ class Sentry(metaclass=abc.ABCMeta):
             raise TypeError("Right-side must be either a Wrench or a coroutine function")
 
     @abc.abstractmethod
-    def dispenser(self):
+    def dispenser(self) -> Dispenser:
         """
         Get the :class:`.Dispenser` that created this Sentry.
 
@@ -151,7 +152,7 @@ class SentryFilter(Sentry):
     async def put(self, item) -> None:
         return await self.previous.put(item)
 
-    def dispenser(self):
+    def dispenser(self) -> Dispenser:
         return self.previous.dispenser()
 
 
@@ -176,7 +177,7 @@ class SentrySource(Sentry):
     async def put(self, item) -> None:
         return await self.queue.put(item)
 
-    async def dispenser(self):
+    async def dispenser(self) -> Dispenser:
         return self._dispenser
 
 
