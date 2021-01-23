@@ -61,6 +61,21 @@ class ForbiddenError(FrontendError):
     """
 
 
+class DispenserException(EngineerException):
+    """
+    The base class for errors in :mod:`royalnet.engineer.dispenser`.
+    """
+
+
+class LockedDispenserError(DispenserException):
+    """
+    The dispenser couldn't start a new conversation as it is currently locked.
+    """
+    def __init__(self, locked_by, *args):
+        super().__init__(*args)
+        self.locked_by = locked_by
+
+
 __all__ = (
     "EngineerException",
     "WrenchException",
@@ -72,4 +87,6 @@ __all__ = (
     "FrontendError",
     "NotSupportedError",
     "ForbiddenError",
+    "DispenserException",
+    "LockedDispenserError",
 )

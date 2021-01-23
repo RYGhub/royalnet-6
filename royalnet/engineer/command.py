@@ -32,7 +32,7 @@ class Command(c.Conversation):
               are later completed by a runner.
     """
 
-    def __init__(self, f: c.ConversationProtocol, *, names: t.List[str] = None, pattern: re.Pattern):
+    def __init__(self, f: c.ConversationProtocol, *, names: t.List[str] = None, pattern: re.Pattern, lock: bool = True):
         """
         Create a new :class:`.Command` .
         """
@@ -52,6 +52,11 @@ class Command(c.Conversation):
         self.pattern: re.Pattern = pattern
         """
         The pattern that should be matched by the command.
+        """
+
+        self.lock: bool = lock
+        """
+        If calling this command should :meth:`~royalnet.engineer.dispenser.Dispenser.lock` the dispenser.
         """
 
     def name(self):
@@ -96,9 +101,17 @@ class Command(c.Conversation):
 
         log.debug(f"Match successful, getting capture groups of: {match!r}")
         message_kwargs: t.Dict[str, str] = match.groupdict()
-        
-        log.debug(f"Passing args to function: {message_kwargs!r}")
-        return await super().run(_sentry=_sentry, _msg=bullet, **base_kwargs, **message_kwargs)
+
+        if self.lock:
+            log.debug(f"Locking the dispenser...")
+
+            with _sentry.dispenser().lock(self):
+                log.debug(f"Passing args to function: {message_kwargs!r}")
+                return await super().run(_sentry=_sentry, _msg=bullet, **base_kwargs, **message_kwargs)
+
+        else:
+            log.debug(f"Passing args to function: {message_kwargs!r}")
+            return await super().run(_sentry=_sentry, _msg=bullet, **base_kwargs, **message_kwargs)
 
     def help(self) -> t.Optional[str]:
         """
@@ -116,7 +129,7 @@ class PartialCommand:
 
     They can specified later using :meth:`.complete`.
     """
-    def __init__(self, f: c.ConversationProtocol, syntax: str):
+    def __init__(self, f: c.ConversationProtocol, syntax: str, lock: bool = True):
         """
         Create a new :class:`.PartialCommand` .
 
@@ -131,6 +144,11 @@ class PartialCommand:
         self.syntax: str = syntax
         """
         Part of the pattern from where the arguments should be captured.
+        """
+
+        self.lock: bool = lock
+        """
+        If calling this command should :meth:`~royalnet.engineer.dispenser.Dispenser.lock` the dispenser.
         """
 
     @classmethod
@@ -167,8 +185,10 @@ class PartialCommand:
                 raise ValueError(f"Name is not alphanumeric: {name!r}")
 
         name_regex = f"(?:{'|'.join(names)})"
+        log.debug(f"Completed pattern: {name_regex!r}")
+
         pattern: re.Pattern = re.compile(pattern.format(name=name_regex, syntax=self.syntax), re.IGNORECASE)
-        return Command(f=self.f, names=names, pattern=pattern)
+        return Command(f=self.f, names=names, pattern=pattern, lock=self.lock)
 
     def __repr__(self):
         return f"<{self.__class__.__qualname__} {self.f!r}>"

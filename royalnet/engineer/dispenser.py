@@ -10,6 +10,7 @@ import contextlib
 
 from .sentry import SentrySource
 from .conversation import Conversation
+from .exc import LockedDispenserError
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +20,13 @@ class Dispenser:
         self.sentries: t.List[SentrySource] = []
         """
         A :class:`list` of all the running sentries of this dispenser.
+        """
+
+        self._locked_by: t.List[Conversation] = []
+        """
+        The conversation that are currently locking this dispenser.
+        
+        .. seealso:: :meth:`.lock`
         """
 
     async def put(self, item: t.Any) -> None:
@@ -54,7 +62,15 @@ class Dispenser:
         Run the passed conversation.
 
         :param conv: The conversation to run.
+        :raises .LockedDispenserError: If the dispenser is currently :attr:`.locked_by` a :class:`.Conversation`.
         """
+        log.debug(f"Trying to run: {conv!r}")
+
+        if self._locked_by is not None:
+            log.debug(f"Dispenser is locked by {self._locked_by!r}, refusing to run {conv!r}")
+            raise LockedDispenserError(self._locked_by, f"The Dispenser is currently locked by {self._locked_by!r} and "
+                                                        f"cannot start new conversations.")
+
         log.debug(f"Running: {conv}")
         with self.sentry() as sentry:
             state = conv(_sentry=sentry, **kwargs)
@@ -62,6 +78,26 @@ class Dispenser:
             log.debug(f"First state: {state}")
             while state := await state:
                 log.debug(f"Switched to: {state}")
+
+    @contextlib.contextmanager
+    def lock(self, conv: Conversation):
+        """
+        Lock the dispenser while this :func:`~contextlib.contextmanager` is in scope.
+
+        A locked dispenser will refuse to :meth:`.run` any new conversations, raising :exc:`.exc.LockedDispenserError`
+        instead.
+
+        :param conv: The conversation that requested the lock.
+
+        .. seealso:: :attr:`._locked_by`
+        """
+        log.debug(f"Adding lock: {conv!r}")
+        self._locked_by.append(conv)
+
+        yield
+
+        log.debug(f"Clearing lock: {conv!r}")
+        self._locked_by.remove(conv)
 
 
 __all__ = (
