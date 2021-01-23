@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "royalnet"
-version = "6.0.0a38"
+version = "6.0.0"
 description = "A multipurpose bot framework"
 authors = ["Stefano Pigozzi <me@steffo.eu>"]
 license = "AGPL-3.0-or-later"
@@ -9,7 +9,7 @@ repository = "https://github.com/Steffo99/royalnet"
 documentation = "https://royalnet-6.readthedocs.io/"
 keywords = ["royalnet"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Operating System :: OS Independent",
