@@ -66,7 +66,7 @@ class Dispenser:
         """
         log.debug(f"Trying to run: {conv!r}")
 
-        if self._locked_by is not None:
+        if self._locked_by:
             log.debug(f"Dispenser is locked by {self._locked_by!r}, refusing to run {conv!r}")
             raise LockedDispenserError(self._locked_by, f"The Dispenser is currently locked by {self._locked_by!r} and "
                                                         f"cannot start new conversations.")
