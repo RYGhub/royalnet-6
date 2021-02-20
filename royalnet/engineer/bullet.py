@@ -23,6 +23,7 @@ import royalnet.royaltyping as t
 import abc
 import datetime
 import sqlalchemy.orm
+import async_property as ap
 
 from . import exc
 
@@ -58,39 +59,44 @@ class Message(Bullet, metaclass=abc.ABCMeta):
     An abstract class representing a chat message.
     """
 
+    @ap.async_cached_property
     async def text(self) -> t.Optional[str]:
         """
         :return: The raw text contents of the message.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_cached_property
     async def timestamp(self) -> t.Optional[datetime.datetime]:
         """
         :return: The :class:`datetime.datetime` at which the message was sent.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_cached_property
     async def reply_to(self) -> t.Optional[Message]:
         """
         :return: The :class:`.Message` this message is a reply to.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_cached_property
     async def channel(self) -> t.Optional[Channel]:
         """
         :return: The :class:`.Channel` this message was sent in.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_cached_property
     async def files(self) -> t.Optional[t.List[t.BinaryIO]]:
         """
         :return: A :class:`list` of files attached to the message.
         """
         raise exc.NotSupportedError()
 
-    async def send_reply(self, *,
-                         text: str = None,
-                         files: t.List[t.BinaryIO] = None) -> t.Optional[Message]:
+    async def reply(self, *,
+                    text: str = None,
+                    files: t.List[t.BinaryIO] = None) -> t.Optional[Message]:
         """
         Reply to this message in the same channel it was sent in.
 
@@ -108,18 +114,21 @@ class Channel(Bullet, metaclass=abc.ABCMeta):
     An abstract class representing a channel where messages can be sent.
     """
 
+    @ap.async_cached_property
     async def name(self) -> t.Optional[str]:
         """
         :return: The name of the message channel, such as the chat title.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_cached_property
     async def topic(self) -> t.Optional[str]:
         """
         :return: The topic (description) of the message channel.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_cached_property
     async def users(self) -> t.List[User]:
         """
         :return: A :class:`list` of :class:`.User` who can read messages sent in the channel.
@@ -146,12 +155,14 @@ class User(Bullet, metaclass=abc.ABCMeta):
     An abstract class representing a user who can read or send messages in the chat.
     """
 
+    @ap.async_cached_property
     async def name(self) -> t.Optional[str]:
         """
         :return: The user's name.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_cached_property
     async def database(self, session: sqlalchemy.orm.Session) -> t.Any:
         """
         :param session: A :class:`sqlalchemy.orm.Session` instance to use to fetch the database entry.
@@ -159,17 +170,11 @@ class User(Bullet, metaclass=abc.ABCMeta):
         """
         raise exc.NotSupportedError()
 
-    async def send_message(self, *,
-                           text: str = None,
-                           files: t.List[t.BinaryIO] = None) -> t.Optional[Message]:
+    async def slide(self) -> Channel:
         """
-        Send a private message to the user.
+        Slide into the DMs of the user and get the private channel they share with with the bot.
 
-        :param text: The text to send in the message.
-        :param files: A :class:`list` of files to attach to the message. The file type should be detected automatically
-                      by the frontend, and sent in the best format possible (if all files are photos, they should be
-                      sent as a photo album, etc.).
-        :return: The sent message.
+        :return: The private channel where you can talk to the user.
         """
         raise exc.NotSupportedError()
 
