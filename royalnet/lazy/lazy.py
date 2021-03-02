@@ -29,15 +29,21 @@ class Lazy:
             evaluated_kwargs[key] = value
         return evaluated_kwargs
 
-    def evaluate(self) -> Result:
+    def evaluate(self, *args, **kwargs) -> Result:
         if not self.evaluated:
-            self._result = self._func(*self._evaluate_args(), **self._evaluate_kwargs())
+            self._result = self._func(*self._evaluate_args(), *args, **self._evaluate_kwargs(), **kwargs)
             self.evaluated = True
         return self._result
 
     @property
     def e(self) -> Result:
         return self.evaluate()
+
+    @classmethod
+    def decorator(cls, *args, **kwargs):
+        def deco(func):
+            return cls(func, *args, **kwargs)
+        return deco
 
 
 __all__ = (
