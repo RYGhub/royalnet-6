@@ -5,6 +5,7 @@ import datetime
 
 if t.TYPE_CHECKING:
     from .channel import Channel
+    from .user import User
     from .button_reaction import ButtonReaction
 
 
@@ -38,6 +39,13 @@ class Message(BulletContents, metaclass=abc.ABCMeta):
     async def channel(self) -> t.Optional["Channel"]:
         """
         :return: The :class:`.Channel` this message was sent in.
+        """
+        raise exc.NotSupportedError()
+
+    @ap.async_property
+    async def sender(self) -> t.Optional["User"]:
+        """
+        :return: The :class:`.User` who sent this message.
         """
         raise exc.NotSupportedError()
 
