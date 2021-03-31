@@ -31,3 +31,6 @@ JSON = Union[
 A recursive JSON value: either a :data:`.JSONScalar`, or a :class:`list` of :data:`.JSON` objects, or a :class:`dict` 
 of :class:`str` to :data:`.JSON` mappings. 
 """
+
+
+WrenchLike = Callable[[Any], Awaitable[Any]]

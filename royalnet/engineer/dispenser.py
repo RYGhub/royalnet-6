@@ -11,6 +11,7 @@ import contextlib
 from .sentry import SentrySource
 from .conversation import Conversation
 from .exc import LockedDispenserError
+from .bullet.projectiles import Projectile
 
 log = logging.getLogger(__name__)
 
@@ -29,11 +30,11 @@ class Dispenser:
         .. seealso:: :meth:`.lock`
         """
 
-    async def put(self, item: t.Any) -> None:
+    async def put(self, item: Projectile) -> None:
         """
-        Insert a new item in the queues of all the running sentries.
+        Insert a new projectile in the queues of all the running sentries.
 
-        :param item: The item to insert.
+        :param item: The projectile to insert.
         """
         log.debug(f"Putting {item}...")
         for sentry in self.sentries:

@@ -7,7 +7,7 @@
 ``bullet``
 ----------
 
-.. automodule:: royalnet.engineer.bullet
+.. automodule:: royalnet.engineer.gunpowder
 
 
 ``command``

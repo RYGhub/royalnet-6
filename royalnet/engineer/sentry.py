@@ -1,5 +1,5 @@
 """
-Sentries are asynchronous receivers for events (usually :class:`bullet.Bullet`) incoming from Dispensers.
+Sentries are asynchronous receivers for events (usually :class:`bullet.Projectile`) incoming from Dispensers.
 
 They support event filtering through Wrenches and coroutine functions.
 """
@@ -15,7 +15,7 @@ from . import discard
 
 if t.TYPE_CHECKING:
     from .dispenser import Dispenser
-    from .conversation import Conversation
+    from .bullet import Projectile, Casing
 
 log = logging.getLogger(__name__)
 
@@ -32,9 +32,9 @@ class Sentry(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_nowait(self):
         """
-        Try to get a single :class:`~.bullet.Bullet` from the pipeline, without blocking or handling discards.
+        Try to get a single :class:`~.bullet.Projectile` from the pipeline, without blocking or handling discards.
 
-        :return: The **returned** :class:`~.bullet.Bullet`.
+        :return: The **returned** :class:`~.bullet.Projectile`.
         :raises asyncio.QueueEmpty: If the queue is empty.
         :raises .discard.Discard: If the object was **discarded** by the pipeline.
         :raises Exception: If an exception was **raised** in the pipeline.
@@ -44,10 +44,10 @@ class Sentry(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def get(self):
         """
-        Try to get a single :class:`~.bullet.Bullet` from the pipeline, blocking until something is available, but
+        Try to get a single :class:`~.bullet.Projectile` from the pipeline, blocking until something is available, but
         without handling discards.
 
-        :return: The **returned** :class:`~.bullet.Bullet`.
+        :return: The **returned** :class:`~.bullet.Projectile`.
         :raises .discard.Discard: If the object was **discarded** by the pipeline.
         :raises Exception: If an exception was **raised** in the pipeline.
         """
@@ -55,10 +55,10 @@ class Sentry(metaclass=abc.ABCMeta):
 
     async def wait(self):
         """
-        Try to get a single :class:`~.bullet.Bullet` from the pipeline, blocking until something is available and is not
-        discarded.
+        Try to get a single :class:`~.bullet.Projectile` from the pipeline, blocking until something is available and is
+         not discarded.
 
-        :return: The **returned** :class:`~.bullet.Bullet`.
+        :return: The **returned** :class:`~.bullet.Projectile`.
         :raises Exception: If an exception was **raised** in the pipeline.
         """
         while True:
@@ -77,7 +77,7 @@ class Sentry(metaclass=abc.ABCMeta):
         return self.get().__await__()
 
     @abc.abstractmethod
-    async def put(self, item: t.Any) -> None:
+    async def put(self, item: "Projectile") -> None:
         """
         Insert a new item in the queue.
 
@@ -85,7 +85,7 @@ class Sentry(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
-    def filter(self, wrench: t.Callable[[t.Any], t.Awaitable[t.Any]]) -> SentryFilter:
+    def filter(self, wrench: t.WrenchLike) -> SentryFilter:
         """
         Chain a new filter to the pipeline.
 
@@ -100,7 +100,7 @@ class Sentry(metaclass=abc.ABCMeta):
         else:
             raise TypeError("wrench must be either a Wrench or a coroutine function")
 
-    def __or__(self, other: t.Callable[[t.Any], t.Awaitable[t.Any]]) -> SentryFilter:
+    def __or__(self, other: t.WrenchLike) -> SentryFilter:
         """
         A unix-pipe-like interface for :meth:`.filter`.
 
@@ -129,13 +129,13 @@ class SentryFilter(Sentry):
     A non-root node of the filtering pipeline.
     """
 
-    def __init__(self, previous: Sentry, wrench: t.Callable[[t.Any], t.Awaitable[t.Any]]):
+    def __init__(self, previous: Sentry, wrench: t.WrenchLike):
         self.previous: Sentry = previous
         """
         The previous node of the pipeline.
         """
 
-        self.wrench: t.Callable[[t.Any], t.Awaitable[t.Any]] = wrench
+        self.wrench: t.WrenchLike = wrench
         """
         The coroutine function to apply to all objects passing through this node.
         """
