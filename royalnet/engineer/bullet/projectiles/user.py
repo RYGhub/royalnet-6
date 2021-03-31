@@ -10,6 +10,7 @@ class UserJoined(Projectile, metaclass=abc.ABCMeta):
     An abstract class representing an user who just joined the chat channel.
     """
 
+    @ap.async_property
     async def user(self) -> "User":
         """
         :return: The user who joined.
@@ -22,6 +23,7 @@ class UserLeft(Projectile, metaclass=abc.ABCMeta):
     An abstract class representing an user who just left the chat channel.
     """
 
+    @ap.async_property
     async def user(self) -> "User":
         """
         :return: The user who left.
@@ -34,6 +36,7 @@ class UserUpdate(Projectile, metaclass=abc.ABCMeta):
     An abstract class representing a change in status of an user in the chat channel.
     """
 
+    @ap.async_property
     async def user(self) -> "User":
         """
         :return: The user who joined.
@@ -42,5 +45,7 @@ class UserUpdate(Projectile, metaclass=abc.ABCMeta):
 
 
 __all__ = (
-    "User",
+    "UserJoined",
+    "UserLeft",
+    "UserUpdate",
 )

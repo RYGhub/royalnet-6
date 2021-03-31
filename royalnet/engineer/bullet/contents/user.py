@@ -10,12 +10,14 @@ class User(BulletContents, metaclass=abc.ABCMeta):
     An abstract class representing a user who can read or send messages in the chat.
     """
 
+    @ap.async_property
     async def name(self) -> t.Optional[str]:
         """
         :return: The user's name.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_property
     async def database(self, session: so.Session) -> t.Any:
         """
         :param session: A :class:`sqlalchemy.orm.Session` instance to use to fetch the database entry.

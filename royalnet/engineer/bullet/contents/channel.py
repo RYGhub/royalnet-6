@@ -11,18 +11,21 @@ class Channel(BulletContents, metaclass=abc.ABCMeta):
     An abstract class representing a channel where messages can be sent.
     """
 
+    @ap.async_property
     async def name(self) -> t.Optional[str]:
         """
         :return: The name of the message channel, such as the chat title.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_property
     async def topic(self) -> t.Optional[str]:
         """
         :return: The topic (description) of the message channel.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_property
     async def users(self) -> t.List["User"]:
         """
         :return: A :class:`list` of :class:`.User` who can read messages sent in the channel.

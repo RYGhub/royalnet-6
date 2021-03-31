@@ -10,6 +10,7 @@ class MessageReceived(Projectile, metaclass=abc.ABCMeta):
     An abstract class representing the reception of a single message.
     """
 
+    @ap.async_property
     async def message(self) -> "Message":
         """
         :return: The received Message.
@@ -22,6 +23,7 @@ class MessageEdited(Projectile, metaclass=abc.ABCMeta):
     An abstract class representing the editing of a single message.
     """
 
+    @ap.async_property
     async def message(self) -> "Message":
         """
         :return: The edited Message.
@@ -34,6 +36,7 @@ class MessageDeleted(Projectile, metaclass=abc.ABCMeta):
     An abstract class representing the deletion of a single message.
     """
 
+    @ap.async_property
     async def message(self) -> "Message":
         """
         :return: The edited Message.

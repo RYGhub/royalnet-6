@@ -90,12 +90,12 @@ class Command(c.Conversation):
             return
 
         log.debug(f"Getting message of: {projectile!r}")
-        if not (msg := await projectile.message()):
+        if not (msg := await projectile.message):
             log.warning(f"Returning: {projectile!r} has no message")
             return
 
         log.debug(f"Getting message text of: {msg!r}")
-        if not (text := await msg.text()):
+        if not (text := await msg.text):
             log.debug(f"Returning: {msg!r} has no text")
             return
 
@@ -112,11 +112,25 @@ class Command(c.Conversation):
 
             with _sentry.dispenser().lock(self):
                 log.debug(f"Passing args to function: {message_kwargs!r}")
-                return await super().run(_sentry=_sentry, _proj=projectile, **base_kwargs, **message_kwargs)
+                return await super().run(
+                    _sentry=_sentry,
+                    _proj=projectile,
+                    _msg=msg,
+                    _text=text,
+                    **base_kwargs,
+                    **message_kwargs
+                )
 
         else:
             log.debug(f"Passing args to function: {message_kwargs!r}")
-            return await super().run(_sentry=_sentry, _proj=projectile, **base_kwargs, **message_kwargs)
+            return await super().run(
+                _sentry=_sentry,
+                _proj=projectile,
+                _msg=msg,
+                _text=text,
+                **base_kwargs,
+                **message_kwargs
+            )
 
     def help(self) -> t.Optional[str]:
         """

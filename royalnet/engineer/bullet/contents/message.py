@@ -13,36 +13,42 @@ class Message(BulletContents, metaclass=abc.ABCMeta):
     An abstract class representing a chat message.
     """
 
+    @ap.async_property
     async def text(self) -> t.Optional[str]:
         """
         :return: The raw text contents of the message.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_property
     async def timestamp(self) -> t.Optional[datetime.datetime]:
         """
         :return: The :class:`datetime.datetime` at which the message was sent.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_property
     async def reply_to(self) -> t.Optional[Message]:
         """
         :return: The :class:`.Message` this message is a reply to.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_property
     async def channel(self) -> t.Optional["Channel"]:
         """
         :return: The :class:`.Channel` this message was sent in.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_property
     async def files(self) -> t.Optional[t.List[t.BinaryIO]]:
         """
         :return: A :class:`list` of files attached to the message.
         """
         raise exc.NotSupportedError()
 
+    @ap.async_property
     async def reactions(self) -> t.List["ButtonReaction"]:
         """
         :return: A :class:`list` of reaction buttons attached to the message.
