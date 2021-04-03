@@ -95,10 +95,11 @@ class Dispenser:
         log.debug(f"Adding lock: {conv!r}")
         self._locked_by.append(conv)
 
-        yield
-
-        log.debug(f"Clearing lock: {conv!r}")
-        self._locked_by.remove(conv)
+        try:
+            yield
+        finally:
+            log.debug(f"Clearing lock: {conv!r}")
+            self._locked_by.remove(conv)
 
 
 __all__ = (
