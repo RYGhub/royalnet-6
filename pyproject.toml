@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "royalnet"
-version = "6.1.2"
+version = "6.1.4"
 description = "A multipurpose bot framework"
 authors = ["Stefano Pigozzi <me@steffo.eu>"]
 license = "AGPL-3.0-or-later"
@@ -20,7 +20,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-sqlalchemy = "^1.4.4"
+sqlalchemy = "^1.4.5"
 toml = "^0.10.1"
 pydantic = "^1.8.1"
 async-property = "^0.2.1"
