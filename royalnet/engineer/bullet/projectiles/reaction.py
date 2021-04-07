@@ -1,3 +1,7 @@
+"""
+This module contains the :class:`.Reaction` projectile.
+"""
+
 from __future__ import annotations
 from ._imports import *
 

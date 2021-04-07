@@ -1,3 +1,8 @@
+"""
+This module contains the projectiles related to messages: :class:`.MessageReceived`, :class:`MessageEdited` and
+:class:`MessageDeleted`.
+"""
+
 from __future__ import annotations
 from ._imports import *
 

@@ -1,5 +1,5 @@
 """
-The exceptions which can happen in bullets.
+This modules contains the exceptions which can happen in bullets.
 """
 
 from .. import exc
@@ -19,11 +19,11 @@ class FrontendError(BulletException):
 
 class NotSupportedError(FrontendError, NotImplementedError):
     """
-    The requested property isn't available on the current frontend.
+    The requested property isn't available on the current implementation.
     """
 
 
 class ForbiddenError(FrontendError):
     """
-    The bot user does not have sufficient permissions to perform a frontend operation.
+    The bot does not have sufficient permissions to perform an operation.
     """

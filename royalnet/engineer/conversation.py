@@ -1,28 +1,21 @@
-# Module docstring
 """
-Conversations are wrapper classes that can be applied to functions which await
-:class:`~royalnet.engineer.bullet.Bullet`\\ s from a :class:`~royalnet.engineer.sentry.Sentry`.
+This module contains :class:`.ConversationProtocol`, the typing stub for conversation functions, and
+:class:`.Conversation`, a decorator for functions which should help in debugging conversations.
 """
 
-# Special imports
 from __future__ import annotations
 import royalnet.royaltyping as t
 
-# External imports
 import logging
 
-# Internal imports
 from . import sentry as s
 
-
-# Special global objects
 log = logging.getLogger(__name__)
 
 
-# Code
 class ConversationProtocol(t.Protocol):
     """
-    Typing annotation for Conversation functions.
+    Typing stub for :class:`.Conversation`\\ -compatible functions.
     """
     def __call__(self, *, _sentry: s.Sentry, **kwargs) -> t.Awaitable[t.Optional[ConversationProtocol]]:
         ...
@@ -30,15 +23,20 @@ class ConversationProtocol(t.Protocol):
 
 class Conversation:
     """
-    The base class for Conversations. It does nothing on its own except providing better debug information.
+    :class:`.Conversation`\\ s are functions which await
+    :class:`~royalnet.engineer.bullet.projectiles._base.Projectile`\\ s incoming from a
+    :class:`~royalnet.engineer.sentry.Sentry` .
+
+    This class is callable ( :meth:`.__call__` ), and can be used in place of plain functions to have better debug
+    information.
     """
 
     def __init__(self, f: ConversationProtocol, *_, **__):
         self.f: ConversationProtocol = f
         """
-        The function that was wrapped by this conversation.
+        The function that is wrapped by this class.
          
-        It can be called by calling this object as it was a function::
+        It can be called by calling this object as if it was a function::
         
             my_conv(_sentry=_sentry, _msg=msg)
         """
@@ -46,7 +44,14 @@ class Conversation:
     @classmethod
     def new(cls, *args, **kwargs):
         """
-        A decorator that instantiates a new :class:`Conversation` object using the decorated function.
+        Decorator factory for creating new :class:`.PartialCommand` with the decorator syntax::
+
+            >>> @Conversation.new()
+            ... def my_conv(*, _sentry: s.Sentry, **__):
+            ...     pass
+
+            >>> my_conv
+                <Conversation #1234>
 
         :return: The created :class:`Conversation` object.
                  It can still be called in the same way as the previous function!
@@ -59,16 +64,7 @@ class Conversation:
 
     def __call__(self, *, _sentry: s.Sentry, **kwargs) -> t.Awaitable[t.Optional[ConversationProtocol]]:
         log.debug(f"Calling: {self!r}")
-        return self.run(_sentry=_sentry, **kwargs)
-
-    async def run(self, *, _sentry: s.Sentry, **kwargs) -> t.Optional[ConversationProtocol]:
-        """
-        The coroutine function that generates the coroutines returned by :meth:`.__call__` .
-
-        It is a :class:`Conversation` itself.
-        """
-        log.debug(f"Running: {self!r}")
-        return await self.f(_sentry=_sentry, **kwargs)
+        return self.f(_sentry=_sentry, **kwargs)
 
     def __repr__(self):
         return f"<{self.__class__.__qualname__} #{id(self)}>"

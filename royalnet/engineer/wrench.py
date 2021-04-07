@@ -12,6 +12,18 @@ from . import discard
 from . import exc
 
 
+class WrenchException(exc.EngineerException):
+    """
+    The base class for errors in :mod:`royalnet.engineer.wrench`.
+    """
+
+
+class DeliberateException(WrenchException):
+    """
+    This exception was deliberately raised by :class:`.ErrorAll`.
+    """
+
+
 class Wrench(metaclass=abc.ABCMeta):
     """
     The abstract base class for Wrenches.
@@ -67,7 +79,7 @@ class ErrorAll(Wrench):
     """
 
     async def filter(self, obj: t.Any) -> t.Any:
-        raise exc.DeliberateException("ErrorAll received an object")
+        raise DeliberateException("ErrorAll received an object")
 
 
 class CheckBase(Wrench, metaclass=abc.ABCMeta):
@@ -293,15 +305,17 @@ class Check(CheckBase):
 
 
 __all__ = (
-    "Wrench",
+    "Check",
     "CheckBase",
-    "Type",
-    "StartsWith",
-    "EndsWith",
     "Choice",
+    "DeliberateException",
+    "EndsWith",
+    "Lambda",
     "RegexCheck",
     "RegexMatch",
     "RegexReplace",
-    "Lambda",
-    "Check",
+    "StartsWith",
+    "Type",
+    "Wrench",
+    "WrenchException",
 )

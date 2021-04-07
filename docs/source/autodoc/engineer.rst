@@ -7,7 +7,21 @@
 ``bullet``
 ----------
 
-.. automodule:: royalnet.engineer.gunpowder
+.. automodule:: royalnet.engineer.bullet
+
+
+``contents``
+~~~~~~~~~~~~
+
+.. automodule:: royalnet.engineer.bullet.contents
+   :imported-members:
+
+
+``projectiles``
+~~~~~~~~~~~~~~~
+
+.. automodule:: royalnet.engineer.bullet.projectiles
+   :imported-members:
 
 
 ``command``

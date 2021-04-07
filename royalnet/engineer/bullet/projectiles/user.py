@@ -1,3 +1,8 @@
+"""
+This module contains the projectiles related to user actions, such as :class:`.UserJoined`, :class:`.UserLeft` and
+:class:`.UserUpdate`.
+"""
+
 from __future__ import annotations
 from ._imports import *
 

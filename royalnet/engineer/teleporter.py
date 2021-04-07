@@ -1,5 +1,5 @@
 """
-The teleporter uses :mod:`pydantic` to validate function parameters and return values.
+This module contains the :class:`.Teleporter` class and its exceptions.
 """
 
 from __future__ import annotations
@@ -15,7 +15,29 @@ Value = t.TypeVar("Value")
 log = logging.getLogger(__name__)
 
 
+class TeleporterError(exc.EngineerException, pydantic.ValidationError):
+    """
+    The base class for errors in :mod:`royalnet.engineer.teleporter`.
+    """
+
+
+class InTeleporterError(TeleporterError):
+    """
+    The input parameters validation failed.
+    """
+
+
+class OutTeleporterError(TeleporterError):
+    """
+    The return value validation failed.
+    """
+
+
 class Teleporter:
+    """
+    A :class:`.Teleporter` is a function wrapper which uses :mod:`pydantic` to perform type checking
+    """
+
     def __init__(self,
                  f: t.Callable[..., t.Any],
                  validate_input: bool = True,
@@ -165,14 +187,14 @@ class Teleporter:
 
         :param kwargs: The keyword arguments that should be passed to the model.
         :return: The created model.
-        :raises .exc.InTeleporterError: If the kwargs fail the validation.
+        :raises .InTeleporterError: If the kwargs fail the validation.
         """
         log.debug(f"Teleporting in: {kwargs!r}")
         try:
             return self.InputModel(**kwargs)
         except pydantic.ValidationError as e:
             log.error(f"Teleport in failed: {e!r}")
-            raise exc.InTeleporterError(errors=e.raw_errors, model=e.model)
+            raise InTeleporterError(errors=e.raw_errors, model=e.model)
 
     def teleport_out(self, value: Value) -> pydantic.BaseModel:
         """
@@ -180,14 +202,14 @@ class Teleporter:
 
         :param value: The value that should be validated.
         :return: The created model.
-        :raises .exc.OutTeleporterError: If the value fails the validation.
+        :raises .OutTeleporterError: If the value fails the validation.
         """
         log.debug(f"Teleporting out: {value!r}")
         try:
             return self.OutputModel(__root__=value)
         except pydantic.ValidationError as e:
             log.error(f"Teleport out failed: {e!r}")
-            raise exc.OutTeleporterError(errors=e.raw_errors, model=e.model)
+            raise OutTeleporterError(errors=e.raw_errors, model=e.model)
 
     @staticmethod
     def _split_kwargs(**kwargs) -> t.Tuple[t.Dict[str, t.Any], t.Dict[str, t.Any]]:
@@ -212,7 +234,7 @@ class Teleporter:
 
     def _run(self, **kwargs) -> t.Any:
         """
-        Run the teleporter synchronously.
+        Run the :class:`.Teleporter` synchronously.
         """
         if self.InputModel:
             log.debug("Validating input...")
@@ -226,7 +248,7 @@ class Teleporter:
 
     async def _run_async(self, **kwargs) -> t.Awaitable[t.Any]:
         """
-        Run the teleporter asynchronously.
+        Run the :class:`.Teleporter` asynchronously.
         """
         if self.InputModel:
             log.debug("Validating input...")
@@ -246,5 +268,8 @@ class Teleporter:
 
 
 __all__ = (
+    "InTeleporterError",
+    "OutTeleporterError",
     "Teleporter",
+    "TeleporterError",
 )

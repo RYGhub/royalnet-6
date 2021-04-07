@@ -1,5 +1,6 @@
 """
-Sentries are asynchronous receivers for events (usually :class:`bullet.Projectile`) incoming from Dispensers.
+This module contains the :class:`.Sentry` class and its descendents :class:`SentryFilter` and :class:`SentrySource`\\ .
+
 
 They support event filtering through Wrenches and coroutine functions.
 """
@@ -22,7 +23,13 @@ log = logging.getLogger(__name__)
 
 class Sentry(metaclass=abc.ABCMeta):
     """
-    The abstract object representing a node of the pipeline.
+    A :class:`.Sentry` is an asynchronous receiver for :class:`~royalnet.engineer.bullet.projectiles._base.Projectile`
+    incoming from :class:`~royalnet.engineer.dispenser.Dispenser`\\ s.
+
+    Sentries can be chained together to form a filtering pipeline, starting with a :class:`.SentrySource` followed by
+    zero or more :class:`.SentryFilter`\\ s.
+
+    This abstract base class represents a single node of the pipeline.
     """
 
     @abc.abstractmethod
@@ -32,11 +39,14 @@ class Sentry(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_nowait(self):
         """
-        Try to get a single :class:`~.bullet.Projectile` from the pipeline, without blocking or handling discards.
+        Try to get a single :class:`~royalnet.engineer.bullet.projectiles._base.Projectile` from the pipeline,
+        **without blocking** or **handling :class:`~royalnet.engineer.discard.Discard`\\ s** .
 
-        :return: The **returned** :class:`~.bullet.Projectile`.
+        :return: The **returned** :class:`~royalnet.engineer.bullet.projectiles._base.Projectile`.
+
         :raises asyncio.QueueEmpty: If the queue is empty.
-        :raises .discard.Discard: If the object was **discarded** by the pipeline.
+        :raises .discard.Discard: If the object was **:class:`~royalnet.engineer.discard.Discard`\\ ed** by
+                                  the pipeline.
         :raises Exception: If an exception was **raised** in the pipeline.
         """
         raise NotImplementedError()
@@ -44,10 +54,12 @@ class Sentry(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def get(self):
         """
-        Try to get a single :class:`~.bullet.Projectile` from the pipeline, blocking until something is available, but
-        without handling discards.
+        Try to get a single :class:`~royalnet.engineer.bullet.projectiles._base.Projectile` from the pipeline,
+        **blocking** until something is available, but
+        **without handling :class:`~royalnet.engineer.discard.Discard`\\ s**.
 
-        :return: The **returned** :class:`~.bullet.Projectile`.
+        :return: The **returned** :class:`~royalnet.engineer.bullet.projectiles._base.Projectile`.
+
         :raises .discard.Discard: If the object was **discarded** by the pipeline.
         :raises Exception: If an exception was **raised** in the pipeline.
         """
@@ -55,10 +67,11 @@ class Sentry(metaclass=abc.ABCMeta):
 
     async def wait(self):
         """
-        Try to get a single :class:`~.bullet.Projectile` from the pipeline, blocking until something is available and is
-         not discarded.
+        Try to get a single :class:`~.bullet.Projectile` from the pipeline, **blocking** until something is available
+        and is **not discarded**.
 
         :return: The **returned** :class:`~.bullet.Projectile`.
+
         :raises Exception: If an exception was **raised** in the pipeline.
         """
         while True:
@@ -72,7 +85,7 @@ class Sentry(metaclass=abc.ABCMeta):
 
     def __await__(self):
         """
-        Awaiting an object implementing :class:`.SentryInterface` corresponds to awaiting :meth:`.wait`.
+        Awaiting an object implementing :class:`.Sentry` corresponds to awaiting :meth:`.wait`.
         """
         return self.get().__await__()
 
@@ -89,9 +102,11 @@ class Sentry(metaclass=abc.ABCMeta):
         """
         Chain a new filter to the pipeline.
 
-        :param wrench: The filter to add to the chain. It can either be a :class:`.wrench.Wrench`, or a coroutine
-                       function accepting a single object as parameter and returning the same or a different one.
-        :return: A new :class:`.SentryFilter` which includes the filter.
+        :param wrench: The filter to add to the chain. It can either be a :class:`~royalnet.engineer.wrench.Wrench`,
+                       or a coroutine function accepting a single object as parameter and returning another one.
+        :return: The resulting :class:`.SentryFilter`\\ .
+        :raises TypeError: If the right side operator is neither a :class:`~royalnet.engineer.wrench.Wrench` or a
+                           coroutine function.
 
         .. seealso:: :meth:`.__or__`
         """
@@ -106,8 +121,11 @@ class Sentry(metaclass=abc.ABCMeta):
 
         .. code-block::
 
-           await (sentry | wrench.Type(Message) | wrench.Sync(lambda o: o.text))
+           await (sentry | wrench.Type(engi.MessageReceived) | wrench.Lambda(lambda o: o.text))
 
+        :return: The resulting :class:`.SentryFilter`\\ .
+        :raises TypeError: If the right side operator is neither a :class:`~royalnet.engineer.wrench.Wrench` or a
+                           coroutine function.
         """
         try:
             return self.filter(other)
@@ -117,9 +135,9 @@ class Sentry(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def dispenser(self) -> Dispenser:
         """
-        Get the :class:`.Dispenser` that created this Sentry.
+        Get the :class:`~royalnet.engineer.dispenser.Dispenser` that created this :class:`.Sentry`.
 
-        :return: The :class:`.Dispenser` object.
+        :return: The :class:`~royalnet.engineer.dispenser.Dispenser` object.
         """
         raise NotImplementedError()
 

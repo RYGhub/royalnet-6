@@ -14,6 +14,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import pkg_resources
 
 # -- Project information -----------------------------------------------------
 
@@ -23,7 +24,7 @@ copyright = '2020, Stefano Pigozzi'
 author = 'Stefano Pigozzi'
 
 # The full version, including alpha/beta/rc tags
-release = '6.0.0a12'
+release = pkg_resources.get_distribution("royalnet").version
 
 
 # -- General configuration ---------------------------------------------------
@@ -69,6 +70,7 @@ html_static_path = ['_static']
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.8", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/13/", None),
+    "async_property": ("https://async-property.readthedocs.io/en/latest/", None),
 }
 
 

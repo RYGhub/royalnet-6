@@ -1,3 +1,8 @@
+"""
+This module contains the :class:`.Discard` special exception.
+"""
+
+
 class Discard(BaseException):
     """
     A special exception which should be raised by :class:`~royalnet.engineer.wrench.Wrench`\\ es if a certain object

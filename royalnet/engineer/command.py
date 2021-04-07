@@ -1,90 +1,129 @@
-# Module docstring
+"""
+This module contains the :class:`.FullCommand` and :class:`.PartialCommand` classes, and all
+:class:`.CommandException`\\ s.
 """
 
-"""
-
-# Special imports
 from __future__ import annotations
 import royalnet.royaltyping as t
 
-# External imports
 import logging
 import re
 
-# Internal imports
 from . import conversation as c
 from . import sentry as s
 from . import bullet as b
 from . import teleporter as tp
+from . import exc
 
-# Special global objects
 log = logging.getLogger(__name__)
 
 
-# Code
-class Command(c.Conversation):
+class CommandException(exc.EngineerException):
     """
-    A Command is a :class:`~.conversation.Conversation` which is started by a :class:`~.bullet.Message` having a text
-    matching the :attr:`.pattern`; the named capture groups of the pattern are then passed as keyword arguments to
-    :attr:`.f`.
-
-    .. info:: Usually you don't directly instantiate commands, you define :class:`.PartialCommand`\\ s in packs which
-              are later completed by a runner.
+    The base :class:`Exception` of the :mod:`royalnet.engineer.command`\\ module.
     """
 
-    def __init__(self, f: c.ConversationProtocol, *, names: t.List[str] = None, pattern: re.Pattern, lock: bool = True):
+
+class CommandNameException(CommandException):
+    """
+    An :class:`Exception` raised because the :attr:`.FullCommand.names` were invalid.
+    """
+
+
+class MissingNameError(ValueError, CommandNameException):
+    """
+    :class:`.FullCommand`\\ s must have at least one name, but no names were passed.
+    """
+
+
+class NotAlphanumericNameError(ValueError, CommandNameException):
+    """
+    All :attr:`.FullCommand.names` should be alphanumeric (a-z 0-9).
+
+    .. seealso:: :meth:`str.isalnum`
+    """
+
+
+class FullCommand(c.Conversation):
+    """
+    A :class:`.FullCommand` is a :class:`~royalnet.engineer.conversation.Conversation` which is started by a
+    :class:`~royalnet.engineer.projectiles.Projectile` having a text matching the :attr:`.pattern`;
+    the named capture groups of the pattern are then passed as teleported keyword arguments to :attr:`.f`.
+
+    .. note:: If you're creating a command pack, you shouldn't instantiate directly :class:`.FullCommand` objects, but
+              you should use :class:`.PartialCommand`\\ s instead.
+    """
+
+    def __init__(self, f: c.ConversationProtocol, *, names: t.List[str], pattern: re.Pattern, lock: bool = True):
         """
-        Create a new :class:`.Command` .
+        Instantiate a new :class:`.FullCommand`\\ .
         """
-        log.debug(f"Teleporting function: {f!r}")
+
+        self.plain_f = f
+        """
+        A reference to the unteleported function :attr:`.f`\\ .
+        """
+
         teleported = tp.Teleporter(f, validate_input=True, validate_output=False)
-
-        log.debug(f"Initializing Conversation with: {teleported!r}")
         super().__init__(teleported)
 
-        self.names: t.List[str] = names if names else []
+        if len(names) < 1:
+            raise MissingNameError(f"Passed 'names' list is empty", names)
+
+        self.names: t.List[str] = names
         """
         The names of the command, as a :class:`list` of :class:`str`.
         
-        The first element of the list is the "main" name, and will be displayed in help messages.
+        The first element of the list is the primary :attr:`.name`, and will be displayed in help messages.
         """
 
         self.pattern: re.Pattern = pattern
         """
-        The pattern that should be matched by the command.
+        The pattern that should be matched by the text of the first 
+        :class:`~royalnet.engineer.bullet.projectiles.message.MessageReceived` by the 
+        :class:`~royalnet.engineer.conversation.Conversation`\\ .
         """
 
         self.lock: bool = lock
         """
-        If calling this command should :meth:`~royalnet.engineer.dispenser.Dispenser.lock` the dispenser.
+        If calling this command should :meth:`~royalnet.engineer.dispenser.Dispenser.lock` the calling dispenser.
+        
+        Locked dispensers cannot run any other :class:`~royalnet.engineer.conversation.Conversation`\\ s but the one 
+        which locked it.
         """
 
     def name(self):
         """
-        :return: The main name of the Command.
+        :return: The primary name of the :class:`.FullCommand`.
         """
         return self.names[0]
 
     def aliases(self):
         """
-        :return: The aliases (non-main names) of the Command.
+        :return: The secondary names of the :class:`.FullCommand`.
         """
         return self.names[1:]
 
     def __repr__(self):
-        if (nc := len(self.names)) > 1:
-            plus = f" + {nc-1} other names"
-        else:
-            plus = ""
+        plus = f" + {nc-1} other names" if (nc := len(self.names)) > 1 else ""
         return f"<{self.__class__.__qualname__}: {self.name()!r}{plus}>"
 
     async def run(self, *, _sentry: s.Sentry, **base_kwargs) -> t.Optional[c.ConversationProtocol]:
+        """
+        Run the command as if it was a conversation.
+
+        :param _sentry: The :class:`~royalnet.engineer.sentry.Sentry` to use for the conversation.
+        :param base_kwargs: Keyword arguments to pass to the wrapped function :attr:`.f` .
+        :return: The result of the wrapped function :attr:`.f` , or :data:`None` if the first projectile received does
+                 not satisfy the requirements of the command.
+        """
+
         log.debug(f"Awaiting a bullet...")
         projectile: b.Projectile = await _sentry
 
         log.debug(f"Received: {projectile!r}")
 
-        log.debug(f"Ensuring a message was received: {projectile!r}")
+        log.debug(f"Ensuring the projectile is a MessageReceived: {projectile!r}")
         if not isinstance(projectile, b.MessageReceived):
             log.debug(f"Returning: {projectile!r} is not a message")
             return
@@ -112,7 +151,7 @@ class Command(c.Conversation):
 
             with _sentry.dispenser().lock(self):
                 log.debug(f"Passing args to function: {message_kwargs!r}")
-                return await super().run(
+                return await super().__call__(
                     _sentry=_sentry,
                     _proj=projectile,
                     _msg=msg,
@@ -123,7 +162,7 @@ class Command(c.Conversation):
 
         else:
             log.debug(f"Passing args to function: {message_kwargs!r}")
-            return await super().run(
+            return await super().__call__(
                 _sentry=_sentry,
                 _proj=projectile,
                 _msg=msg,
@@ -143,21 +182,28 @@ class Command(c.Conversation):
 
 class PartialCommand:
     """
-    A PartialCommand is a :class:`.Command` having an unknown :attr:`~.Command.name` and :attr:`~.Command.pattern` at
-    the moment of creation.
+    :class:`.PartialCommand` is a class meant for **building command packs**.
 
-    They can specified later using :meth:`.complete`.
+    It provides mostly the same interface as a :class:`.FullCommand`, but some fields are unknown until the command is
+    registered in a PDA.
+
+    The missing fields currently are:
+    - :attr:`~.FullCommand.name`
+    - :attr:`~.FullCommand.pattern`
+
+    At the moment of registration in a PDA, :meth:`.complete` is called, converting it in a :class:`.FullCommand`.
     """
+
     def __init__(self, f: c.ConversationProtocol, syntax: str, lock: bool = True):
         """
-        Create a new :class:`.PartialCommand` .
+        Instantiate a new :class:`.PartialCommand`\\ .
 
-        .. seealso:: :meth:`.new`
+        .. seealso:: The corresponding decorator form, :meth:`.new`.
         """
 
         self.f: c.ConversationProtocol = f
         """
-        The function to pass to :attr:`.c.Conversation.f`.
+        The function to pass to be called when the command is executed.
         """
 
         self.syntax: str = syntax
@@ -173,11 +219,20 @@ class PartialCommand:
     @classmethod
     def new(cls, *args, **kwargs):
         """
-        A decorator that instantiates a new :class:`Conversation` object using the decorated function.
+        Decorator factory for creating new :class:`.PartialCommand` with the decorator syntax::
 
-        :return: The created :class:`Conversation` object.
-                 It can still be called in the same way as the previous function!
+            >>> import royalnet.engineer as engi
+
+            >>> @PartialCommand.new(syntax="")
+            ... async def ping(*, _sentry: engi.Sentry, _msg: engi.Message, **__):
+            ...     await _msg.reply(text="🏓 Pong!")
+
+            >>> ping
+                <PartialCommand <function ping at ...>>
+
+        :return: The decorator to wrap around the :attr:`.f` function.
         """
+
         def decorator(f: c.ConversationProtocol):
             partial_command = cls(f=f, *args, **kwargs)
             log.debug(f"Created: {partial_command!r}")
@@ -185,36 +240,42 @@ class PartialCommand:
 
         return decorator
 
-    def complete(self, *, names: t.List[str] = None, pattern: str) -> Command:
+    def complete(self, *, names: t.List[str], pattern: str) -> FullCommand:
         """
-        Complete the :class:`.PartialCommand` with names and a pattern, creating a :class:`Command` object.
+        Complete the :class:`.PartialCommand` with the missing fields, creating a :class:`.FullCommand` object.
 
-        :param names: The names of the command. See :attr:`.Command.names` .
-        :param pattern: The pattern to add to the PartialCommand. It is first :meth:`~str.format`\\ ted with the keyword
-                        arguments ``name`` and ``syntax`` and later :func:`~re.compile`\\ d with the
-                        :data:`re.IGNORECASE` flag.
-        :return: The complete :class:`Command`.
+        :param names: The :attr:`~.FullCommand.names` that the :class:`.FullCommand` should have.
+        :param pattern: The pattern to add to the :class:`.PartialCommand`\\ .
+                        It is first :meth:`~str.format`\\ ted with the keyword arguments ``name`` and ``syntax``
+                        and later :func:`~re.compile`\\ d with the :data:`re.IGNORECASE` flag.
+
+        :return: The completed :class:`.FullCommand`.
+
+        :raises .MissingNameError: If no :attr:`.FullCommand.names` are specified.
         """
-        if names is None:
-            names = []
+
         if len(names) < 1:
-            raise ValueError("Commands must have at least one name.")
+            raise MissingNameError(f"Passed 'names' list is empty", names)
         for name in names:
             if not name.isalnum():
-                raise ValueError(f"Name is not alphanumeric: {name!r}")
+                raise NotAlphanumericNameError(f"Name is not alphanumeric", name)
 
+        log.debug(f"")
         name_regex = f"(?:{'|'.join(names)})"
         log.debug(f"Completed pattern: {name_regex!r}")
 
         pattern: re.Pattern = re.compile(pattern.format(name=name_regex, syntax=self.syntax), re.IGNORECASE)
-        return Command(f=self.f, names=names, pattern=pattern, lock=self.lock)
+        return FullCommand(f=self.f, names=names, pattern=pattern, lock=self.lock)
 
     def __repr__(self):
         return f"<{self.__class__.__qualname__} {self.f!r}>"
 
 
-# Objects exported by this module
 __all__ = (
-    "Command",
+    "CommandException",
+    "CommandNameException",
+    "FullCommand",
+    "MissingNameError",
+    "NotAlphanumericNameError",
     "PartialCommand",
 )

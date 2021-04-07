@@ -1,3 +1,7 @@
+"""
+This module contains the base :class:`.Projectile` class.
+"""
+
 from __future__ import annotations
 
 import abc
