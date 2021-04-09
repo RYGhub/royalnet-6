@@ -15,3 +15,4 @@ from .sentry import *
 from .teleporter import *
 from .wrench import *
 from .bullet import *
+from .pda import *
