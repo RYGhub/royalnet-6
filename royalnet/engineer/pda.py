@@ -22,6 +22,10 @@ class PDA(metaclass=abc.ABCMeta):
 
     def __init__(self):
         self.dispensers: dict["DispenserKey", "Dispenser"] = self._create_dispensers()
+        """
+        A :class:`dict` where the :class:`~royalnet.engineer.dispenser.Dispenser`\\ s of the :class:`.PDA` are mapped 
+        to a implementation-specific key.
+        """
 
     def __repr__(self):
         return f"<{self.__class__.__qualname__} ({len(self.dispensers)} dispensers)>"
@@ -133,6 +137,7 @@ class ConversationListPDA(PDA, metaclass=abc.ABCMeta):
 
     def __init__(self, conversation_kwargs: dict[str, t.Any]):
         super().__init__()
+
         self.conversations: list["ConversationProtocol"] = self._create_conversations()
         self.conversation_kwargs: dict[str, t.Any] = conversation_kwargs
         self._conversation_coro: list[t.Awaitable[t.Any]] = []
