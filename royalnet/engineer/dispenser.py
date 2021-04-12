@@ -9,7 +9,7 @@ import logging
 import contextlib
 
 from .sentry import SentrySource
-from .conversation import Conversation
+from .conversation import ConversationProtocol
 from .exc import EngineerException
 from .bullet.projectiles import Projectile
 
@@ -46,7 +46,7 @@ class Dispenser:
         A :class:`list` of all the running sentries of this dispenser.
         """
 
-        self._locked_by: t.List[Conversation] = []
+        self._locked_by: t.List[ConversationProtocol] = []
         """
         The conversation that are currently locking this dispenser.
         
@@ -82,7 +82,7 @@ class Dispenser:
         log.debug(f"Removing from the sentries list: {sentry!r}")
         self.sentries.remove(sentry)
 
-    async def run(self, conv: Conversation, **kwargs) -> None:
+    async def run(self, conv: ConversationProtocol, **kwargs) -> None:
         """
         Run a :class:`~royalnet.engineer.conversation.Conversation`\\ .
 
@@ -105,7 +105,7 @@ class Dispenser:
                 log.debug(f"Switched to: {state}")
 
     @contextlib.contextmanager
-    def lock(self, conv: Conversation):
+    def lock(self, conv: ConversationProtocol):
         """
         Lock the :class:`.Dispenser` while this :func:`~contextlib.contextmanager` is in scope.
 
