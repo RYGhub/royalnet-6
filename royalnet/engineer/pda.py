@@ -1,6 +1,8 @@
 import abc
 import asyncio
 import contextlib
+import sqlalchemy.orm
+import sqlalchemy.engine
 import royalnet.royaltyping as t
 
 if t.TYPE_CHECKING:
@@ -247,7 +249,32 @@ class ConversationListPDA(PDA, metaclass=abc.ABCMeta):
         return full
 
 
+class WithDatabaseSession(ConversationListPDA, metaclass=abc.ABCMeta):
+    """
+    A :class:`.ConversationListPDA` with database support provided by :mod:`sqlalchemy`\\ by extending
+    :meth:`._conversation_kwargs` with the ``_session`` kwarg.
+    """
+
+    def __init__(self, engine: sqlalchemy.engine.Engine, conversation_kwargs: dict[str, t.Any]):
+        super().__init__(conversation_kwargs)
+        self.engine: sqlalchemy.engine.Engine = engine
+        self.Session: sqlalchemy.orm.sessionmaker = sqlalchemy.orm.sessionmaker(bind=self.engine)
+
+    @contextlib.asynccontextmanager
+    async def _conversation_kwargs(self, conv: "ConversationProtocol") -> dict[str, t.Any]:
+
+        with self.Session(future=True) as session:
+
+            yield {
+                "_pda": self,
+                "_conv": conv,
+                "_session": session,
+                **self.conversation_kwargs,
+            }
+
+
 __all__ = (
     "PDA",
     "ConversationListPDA",
+    "WithDatabaseSession",
 )
