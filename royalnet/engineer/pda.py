@@ -62,10 +62,10 @@ class ConversationListStrategy(PDA, metaclass=abc.ABCMeta):
     def _create_conversations(self) -> list["ConversationProtocol"]:
         return []
 
-    def _make_conversation_kwargs(self, conversation: "ConversationProtocol") -> dict[str, t.Any]:
+    def _make_conversation_kwargs(self, conv: "ConversationProtocol") -> dict[str, t.Any]:
         return {
             "_pda": self,
-            "_conv": self,  # FIXME: this is either genius or crazy
+            "_conv": conv,
             **self.conversation_kwargs,
         }
 
