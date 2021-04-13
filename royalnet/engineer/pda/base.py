@@ -2,7 +2,7 @@
 This module contains the base :class:`.PDA` class.
 """
 
-import abc
+import asyncio
 import royalnet.royaltyping as t
 
 if t.TYPE_CHECKING:
@@ -10,7 +10,7 @@ if t.TYPE_CHECKING:
     DispenserKey = t.TypeVar("DispenserKey")
 
 
-class PDA(metaclass=abc.ABCMeta):
+class PDA:
     """
     .. todo:: Document this.
     """
@@ -26,6 +26,9 @@ class PDA(metaclass=abc.ABCMeta):
 
     def __len__(self):
         return len(self.implementations)
+
+    def run(self):
+        asyncio.run(asyncio.gather(*[implementation.run() for implementation in self.implementations.values()]))
 
 
 __all__ = (

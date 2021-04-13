@@ -63,6 +63,10 @@ class PDAImplementation(metaclass=abc.ABCMeta):
 
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    async def run(self):
+        raise NotImplementedError()
+
 
 class ImplementationException(Exception):
     """
