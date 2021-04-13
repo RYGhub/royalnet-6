@@ -1,7 +1,6 @@
 import royalnet.royaltyping as t
 import logging
 import websockets
-import json
 import pydantic
 
 from . import models, exc
