@@ -24,6 +24,7 @@ sqlalchemy = "^1.4.5"
 toml = "^0.10.1"
 pydantic = "^1.8.1"
 async-property = "^0.2.1"
+websockets = "^8.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
