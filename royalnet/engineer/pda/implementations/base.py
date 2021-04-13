@@ -6,6 +6,7 @@ import royalnet.royaltyping as t
 import abc
 import contextlib
 import asyncio
+import logging
 from royalnet.engineer.dispenser import Dispenser
 
 if t.TYPE_CHECKING:
@@ -39,6 +40,16 @@ class PDAImplementation(metaclass=abc.ABCMeta):
         .. todo:: Document this.
         """
 
+        self.logger_name: str = f"{__name__}.PDAImplementation.{self.namespace}.{name}"
+        """
+        .. todo:: Document this.
+        """
+
+        self.log: logging.Logger = logging.getLogger(self.logger_name)
+        """
+        .. todo:: Document this.
+        """
+
     def __repr__(self):
         return f"<PDAImplementation {self.name}>"
 
@@ -50,9 +61,13 @@ class PDAImplementation(metaclass=abc.ABCMeta):
         .. todo:: Document this.
         """
 
+        self.log.debug(f"Trying to bind to {pda!r}...")
         if self.bound_to is not None:
-            raise ImplementationAlreadyBound()
+            self.log.error(f"Already bound to {pda!r}!")
+            raise ImplementationAlreadyBoundError()
+
         self.bound_to = pda
+        self.log.info(f"Bound to {pda!r}!")
 
     @property
     @abc.abstractmethod
@@ -65,6 +80,10 @@ class PDAImplementation(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     async def run(self):
+        """
+        .. todo:: Document this.
+        """
+
         raise NotImplementedError()
 
 
@@ -74,7 +93,7 @@ class ImplementationException(Exception):
     """
 
 
-class ImplementationAlreadyBound(ImplementationException):
+class ImplementationAlreadyBoundError(ImplementationException):
     """
     .. todo:: Document this.
     """
@@ -107,6 +126,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         :return: The created :class:`list`\\ .
         """
 
+        self.log.debug(f"Creating conversations list...")
         return []
 
     def _create_dispensers(self) -> dict[t.Any, "Dispenser"]:
@@ -116,6 +136,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         :return: The created dictionary (empty by default).
         """
 
+        self.log.debug(f"Creating dispensers list...")
         return {}
 
     def get_dispenser(self, key: "DispenserKey") -> t.Optional["Dispenser"]:
@@ -128,6 +149,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         .. seealso:: :meth:`dict.get`
         """
 
+        self.log.debug(f"Getting dispenser: {key!r}")
         return self.dispensers.get(key)
 
     def _create_dispenser(self) -> "Dispenser":
@@ -137,6 +159,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         :return: The created dispenser.
         """
 
+        self.log.debug(f"Creating new dispenser...")
         return Dispenser()
 
     def get_or_create_dispenser(self, key: "DispenserKey") -> "Dispenser":
@@ -145,6 +168,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         """
 
         if key not in self.dispensers:
+            self.log.debug(f"{self!r}: Dispenser {key!r} does not exist, creating a new one...")
             self.dispensers[key] = self._create_dispenser()
         return self.get_dispenser(key=key)
 
@@ -162,6 +186,8 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         :param conv: The :class:`~royalnet.engineer.conversation.Conversation` to create the args for.
         :return: The corresponding :func:`contextlib.asynccontextmanager`\\ .
         """
+    
+        self.log.debug(f"Creating kwargs for: {conv!r}")
 
         default_kwargs = {
             "_pda": self.bound_to,
@@ -170,6 +196,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         }
 
         async with self._kwargs(default_kwargs, self.extensions) as kwargs:
+            self.log.info(f"Yielding kwargs for {conv!r}: {kwargs!r}")
             yield kwargs
 
     @contextlib.asynccontextmanager
@@ -179,11 +206,15 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         """
 
         if len(remaining) == 0:
+            self.log.debug(f"Kwargs recursion ended!")
             yield kwargs
         else:
             extension = remaining.pop(0)
+            self.log.debug(f"Getting kwargs from {extension}, {len(remaining)} left...")
             async with extension.kwargs(kwargs) as kwargs:
+                self.log.debug(f"Recursing...")
                 async with self._kwargs(kwargs=kwargs, remaining=remaining) as kwargs:
+                    self.log.debug(f"Bubbling up yields...")
                     yield kwargs
 
     def register_conversation(self, conversation: "ConversationProtocol") -> None:
@@ -194,6 +225,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         :param conversation: The :class:`~royalnet.engineer.conversation.Conversation` to register.
         """
 
+        self.log.debug(f"Registering: {conversation!r}")
         self.conversations.append(conversation)
 
     def unregister_conversation(self, conversation: "ConversationProtocol") -> None:
@@ -204,6 +236,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         :param conversation: The :class:`~royalnet.engineer.conversation.Conversation` to unregister.
         """
 
+        self.log.debug(f"Unregistering: {conversation!r}")
         self.conversations.remove(conversation)
 
     @abc.abstractmethod
@@ -226,6 +259,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         :return: The completed :class:`~royalnet.engineer.command.FulLCommand` .
         """
 
+        self.log.debug(f"Completing: {names!r} → {partial!r}")
         return partial.complete(names=names, pattern=self._partialcommand_pattern(partial))
 
     def register_partialcommand(self, partial: "PartialCommand", names: list[str]) -> "FullCommand":
@@ -247,6 +281,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         """
 
         async with self.kwargs(conv=conv) as kwargs:
+            self.log.debug(f"Running {conv!r} in {dispenser!r}...")
             await dispenser.run(conv=conv, **kwargs)
 
     async def _run_all_conversations(self, dispenser: "Dispenser") -> list[asyncio.Task]:
@@ -254,11 +289,20 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         .. todo:: Document this.
         """
 
+        self.log.info(f"Running in {dispenser!r} all conversations...")
+
         tasks: list[asyncio.Task] = []
         for conv in self.conversations:
+
+            self.log.debug(f"Creating task for: {conv!r}")
             task = asyncio.create_task(self._run_conversation(dispenser=dispenser, conv=conv))
+
             tasks.append(task)
+
+        self.log.debug(f"Running a event loop cycle...")
         await asyncio.sleep(0)
+
+        self.log.info(f"Tasks created: {tasks!r}")
         return tasks
 
     async def put_projectile(self, key: DispenserKey, projectile: "Projectile") -> None:
@@ -271,15 +315,22 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         :param projectile: The :class:`~royalnet.engineer.bullet.projectile.Projectile` to insert.
         """
 
+        self.log.debug(f"Finding dispenser {key!r} to put {projectile!r} in...")
         dispenser = self.get_or_create_dispenser(key=key)
+
+        self.log.debug(f"Running all conversations...")
         await self._run_all_conversations(dispenser=dispenser)
+
+        self.log.debug(f"Putting {projectile!r} in {dispenser!r}...")
         await dispenser.put(projectile)
+
+        self.log.debug(f"Running a event loop cycle...")
         await asyncio.sleep(0)
 
 
 __all__ = (
     "PDAImplementation",
     "ImplementationException",
-    "ImplementationAlreadyBound",
+    "ImplementationAlreadyBoundError",
     "ConversationListImplementation",
 )

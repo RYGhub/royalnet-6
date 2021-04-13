@@ -4,10 +4,13 @@ This module contains the base :class:`.PDA` class.
 
 import asyncio
 import royalnet.royaltyping as t
+import logging
 
 if t.TYPE_CHECKING:
     from royalnet.engineer.pda.implementations.base import PDAImplementation
     DispenserKey = t.TypeVar("DispenserKey")
+
+log = logging.getLogger(__name__)
 
 
 class PDA:
@@ -28,10 +31,14 @@ class PDA:
         return len(self.implementations)
 
     async def _run(self):
+        log.info("Running all implementations...")
         await asyncio.gather(*[implementation.run() for implementation in self.implementations.values()])
+        log.fatal("All implementations have finished running?!")
 
     def run(self):
+        log.debug("Running blockingly all implementations...")
         asyncio.run(self._run())
+        log.fatal("Blocking call has finished?!")
 
 
 __all__ = (

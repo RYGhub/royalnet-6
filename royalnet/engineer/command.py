@@ -69,6 +69,7 @@ class FullCommand(c.Conversation):
         .. todo:: Document this.
         """
 
+        # I have no idea what is wrong with this.
         super().__init__(self.run)
 
         if len(names) < 1:
