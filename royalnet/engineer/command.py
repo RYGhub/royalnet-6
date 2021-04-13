@@ -64,8 +64,12 @@ class FullCommand(c.Conversation):
         A reference to the unteleported function :attr:`.f`\\ .
         """
 
-        teleported = tp.Teleporter(f, validate_input=True, validate_output=False)
-        super().__init__(teleported)
+        self.teleported_f = tp.Teleporter(f, validate_input=True, validate_output=False)
+        """
+        .. todo:: Document this.
+        """
+
+        super().__init__(self.run)
 
         if len(names) < 1:
             raise MissingNameError(f"Passed 'names' list is empty", names)
@@ -108,12 +112,12 @@ class FullCommand(c.Conversation):
         plus = f" + {nc-1} other names" if (nc := len(self.names)) > 1 else ""
         return f"<{self.__class__.__qualname__}: {self.name()!r}{plus}>"
 
-    async def run(self, *, _sentry: s.Sentry, **base_kwargs) -> t.Optional[c.ConversationProtocol]:
+    async def run(self, *, _sentry: s.Sentry, **kwargs) -> t.Optional[c.ConversationProtocol]:
         """
         Run the command as if it was a conversation.
 
         :param _sentry: The :class:`~royalnet.engineer.sentry.Sentry` to use for the conversation.
-        :param base_kwargs: Keyword arguments to pass to the wrapped function :attr:`.f` .
+        :param kwargs: Keyword arguments to pass to the wrapped function :attr:`.f` .
         :return: The result of the wrapped function :attr:`.f` , or :data:`None` if the first projectile received does
                  not satisfy the requirements of the command.
         """
@@ -156,7 +160,7 @@ class FullCommand(c.Conversation):
                     _proj=projectile,
                     _msg=msg,
                     _text=text,
-                    **base_kwargs,
+                    **kwargs,
                     **message_kwargs
                 )
 
@@ -167,7 +171,7 @@ class FullCommand(c.Conversation):
                 _proj=projectile,
                 _msg=msg,
                 _text=text,
-                **base_kwargs,
+                **kwargs,
                 **message_kwargs
             )
 

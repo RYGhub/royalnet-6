@@ -27,8 +27,11 @@ class PDA:
     def __len__(self):
         return len(self.implementations)
 
+    async def _run(self):
+        await asyncio.gather(*[implementation.run() for implementation in self.implementations.values()])
+
     def run(self):
-        asyncio.run(asyncio.gather(*[implementation.run() for implementation in self.implementations.values()]))
+        asyncio.run(self._run())
 
 
 __all__ = (

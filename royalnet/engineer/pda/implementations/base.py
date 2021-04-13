@@ -6,10 +6,10 @@ import royalnet.royaltyping as t
 import abc
 import contextlib
 import asyncio
+from royalnet.engineer.dispenser import Dispenser
 
 if t.TYPE_CHECKING:
     from royalnet.engineer.conversation import ConversationProtocol
-    from royalnet.engineer.dispenser import Dispenser
     from royalnet.engineer.pda.extensions.base import PDAExtension
     from royalnet.engineer.pda.base import PDA
     from royalnet.engineer.command import PartialCommand, FullCommand
@@ -54,8 +54,8 @@ class PDAImplementation(metaclass=abc.ABCMeta):
             raise ImplementationAlreadyBound()
         self.bound_to = pda
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def namespace(self):
         """
         .. todo:: Document this.
@@ -87,8 +87,8 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
     :class:`~royalnet.engineer.dispenser.Dispenser` .
     """
 
-    def __init__(self, name: str):
-        super().__init__(name)
+    def __init__(self, name: str, extensions: list["PDAExtension"] = None):
+        super().__init__(name=name, extensions=extensions)
 
         self.conversations: list["ConversationProtocol"] = self._create_conversations()
         """
@@ -178,12 +178,11 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         .. todo:: Document this.
         """
 
-        extension: "PDAExtension" = remaining.pop(0)
-
-        async with extension.kwargs(kwargs) as kwargs:
-            if not remaining:
-                yield kwargs
-            else:
+        if len(remaining) == 0:
+            yield kwargs
+        else:
+            extension = remaining.pop(0)
+            async with extension.kwargs(kwargs) as kwargs:
                 async with self._kwargs(kwargs=kwargs, remaining=remaining) as kwargs:
                     yield kwargs
 
@@ -250,7 +249,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         async with self.kwargs(conv=conv) as kwargs:
             await dispenser.run(conv=conv, **kwargs)
 
-    def _run_all_conversations(self, dispenser: "Dispenser") -> list[asyncio.Task]:
+    async def _run_all_conversations(self, dispenser: "Dispenser") -> list[asyncio.Task]:
         """
         .. todo:: Document this.
         """
@@ -273,7 +272,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         """
 
         dispenser = self.get_or_create_dispenser(key=key)
-        self._run_all_conversations(dispenser=dispenser)
+        await self._run_all_conversations(dispenser=dispenser)
         await dispenser.put(projectile)
         await asyncio.sleep(0)
 
