@@ -26,35 +26,37 @@ class Receiver:
         
         self.instance_count += 1
         self.instance_number = self.instance_count
-        self.log = logging.getLogger(f"{__name__}.{self.instance_number}")
-        
-    def _debug(self, *args, **kwargs):
-        self.log.debug(*args, **kwargs)
-        
-    def _info(self, *args, **kwargs):
-        self.log.info(*args, **kwargs)
-        
-    def _warning(self, *args, **kwargs):
-        self.log.warning(*args, **kwargs)
-        
-    def _error(self, *args, **kwargs):
-        self.log.error(*args, **kwargs)
-        
-    def _fatal(self, *args, **kwargs):
-        self.log.fatal(*args, **kwargs)
+        self.log = logging.getLogger(f"{__name__}.Receiver.{self.instance_number}")
+
+    def _debug(self, *args, **kwargs) -> None:
+        return self.log.debug(*args, **kwargs)
+
+    def _info(self, *args, **kwargs) -> None:
+        return self.log.info(*args, **kwargs)
+
+    def _warning(self, *args, **kwargs) -> None:
+        return self.log.warning(*args, **kwargs)
+
+    def _error(self, *args, **kwargs) -> None:
+        return self.log.error(*args, **kwargs)
+
+    def _fatal(self, *args, **kwargs) -> None:
+        return self.log.fatal(*args, **kwargs)
 
     async def _recv(self, websocket: websockets.WebSocketServerProtocol, model: t.Type[Model]) -> Model:
         self._info(f"Expecting to receive a {model.__qualname__!r}")
 
         self._debug(f"Waiting...")
-        data = await websocket.recv()
+        try:
+            data = await websocket.recv()
+        except websockets.ConnectionClosed:
+            raise exc.Closed(code=1000, reason="Connection was closed.")
 
         self._debug(f"Interpreting data as a {model.__qualname__!r}")
         try:
             return model.parse_raw(data)
         except pydantic.ValidationError as e:
-            self._warning(f"Received malformed packet ({e!r})")
-            raise exc.Closed(code=1002, reason="Packet validation error, see server console.")
+            raise exc.Closed(code=1002, reason=f"Packet validation error, expected {model!r}.")
 
     async def _send(self, websocket: websockets.WebSocketServerProtocol, obj: Model) -> None:
         self._info(f"Trying to send a {obj.__class__.__qualname__!r}")
@@ -71,7 +73,6 @@ class Receiver:
         self._debug(f"Received authentication packet {auth!r}!")
 
         if auth.secret != self.secret:
-            self._warning(f"Received invalid secret {auth.secret!r}, terminating with close code 1008...")
             raise exc.Closed(code=1008, reason=f"Invalid secret.")
 
         self._debug("Authentication successful!")
@@ -98,7 +99,10 @@ class Receiver:
                 await self._dataloop(websocket=websocket, path=path)
 
     async def _close(self, websocket: websockets.WebSocketServerProtocol, close: exc.Closed):
-        self._info(f"Closing connection because {close!r} was raised...")
+        if close.code != 1000:
+            self._warning(f"Closing connection: {close.code} - {close.reason}")
+        else:
+            self._info(f"Closing connection...")
         await websocket.close(code=close.code, reason=close.reason)
         self._debug(f"Connection closed successfully!")
 
