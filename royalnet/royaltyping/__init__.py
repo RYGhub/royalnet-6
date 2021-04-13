@@ -34,3 +34,6 @@ of :class:`str` to :data:`.JSON` mappings.
 
 
 WrenchLike = Callable[[Any], Awaitable[Any]]
+
+Args = Collection[Any]
+Kwargs = Mapping[str, Any]

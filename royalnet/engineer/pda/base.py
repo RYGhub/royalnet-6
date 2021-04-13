@@ -1,0 +1,33 @@
+"""
+This module contains the base :class:`.PDA` class.
+"""
+
+import abc
+import royalnet.royaltyping as t
+
+if t.TYPE_CHECKING:
+    from royalnet.engineer.pda.implementations.base import PDAImplementation
+    DispenserKey = t.TypeVar("DispenserKey")
+
+
+class PDA(metaclass=abc.ABCMeta):
+    """
+    .. todo:: Document this.
+    """
+
+    def __init__(self, implementations: list["PDAImplementation"]):
+        self.implementations: dict[str, "PDAImplementation"] = {}
+        for implementation in implementations:
+            implementation.bind(pda=self)
+            self.implementations[implementation.name] = implementation
+
+    def __repr__(self):
+        return f"<{self.__class__.__qualname__} implementing {', '.join(self.implementations.keys())}>"
+
+    def __len__(self):
+        return len(self.implementations)
+
+
+__all__ = (
+    "PDA",
+)
