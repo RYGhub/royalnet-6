@@ -254,10 +254,10 @@ class ConversationListPDA(PDA, metaclass=abc.ABCMeta):
         return full
 
 
-class WithDatabaseSession(ConversationListPDA, metaclass=abc.ABCMeta):
+class SQLAlchemyPDA(ConversationListPDA, metaclass=abc.ABCMeta):
     """
-    A :class:`.ConversationListPDA` with database support provided by :mod:`sqlalchemy`\\ by extending
-    :meth:`._conversation_kwargs` with the ``_session`` kwarg.
+    Extends :class:`.ConversationListPDA` with database support provided by :mod:`sqlalchemy`\\ by adding the
+    ``_session`` kwarg to the :meth:`._conversation_kwargs`.
     """
 
     def __init__(self, engine: sqlalchemy.engine.Engine, conversation_kwargs: dict[str, t.Any]):
@@ -271,15 +271,14 @@ class WithDatabaseSession(ConversationListPDA, metaclass=abc.ABCMeta):
         with self.Session(future=True) as session:
 
             yield {
-                "_pda": self,
-                "_conv": conv,
                 "_session": session,
-                **self.conversation_kwargs,
+                **super()._conversation_kwargs(conv=conv),
             }
 
 
 __all__ = (
     "PDA",
     "ConversationListPDA",
-    "WithDatabaseSession",
+    "SQLAlchemyPDA",
+
 )
