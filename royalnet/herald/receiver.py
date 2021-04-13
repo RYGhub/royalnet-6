@@ -76,34 +76,40 @@ class Receiver:
 
         self._debug("Authentication successful!")
 
+    async def _checkpath(self, path: str):
+        if path != "/":
+            self._warning(f"Received connection with unexpected path {path!r}, terminating with close code 1010...")
+            raise exc.Closed(code=1010, reason=f"Unexpected path: {path!r}")
+        else:
+            self._debug(f"Path is: {path!r}")
+
     async def _dataloop(self, websocket: websockets.WebSocketServerProtocol, path: str) -> None:
         data = await self._recv(websocket=websocket, model=self.model)
         self._debug(f"Triggering callback with {data!r}")
         await self.callback(websocket, path, data)
 
+    async def _dataget(self, websocket: websockets.WebSocketServerProtocol, path: str):
+        if self.oneshot:
+            self._debug(f"Listening for a single data packet...")
+            await self._dataloop(websocket=websocket, path=path)
+        else:
+            self._debug(f"Listening for data packets until socket closure...")
+            while True:
+                await self._dataloop(websocket=websocket, path=path)
+
+    async def _close(self, websocket: websockets.WebSocketServerProtocol, close: exc.Closed):
+        self._info(f"Closing connection because {close!r} was raised...")
+        await websocket.close(code=close.code, reason=close.reason)
+        self._debug(f"Connection closed successfully!")
+
     async def _listener(self, websocket: websockets.WebSocketServerProtocol, path: str):
         self._info(f"Starting new connection...")
 
         try:
-            if path != "/":
-                self._warning(f"Received connection with unexpected path {path!r}, terminating with close code 1010...")
-                raise exc.Closed(code=1010, reason=f"Unexpected path: {path!r}")
-            else:
-                self._debug(f"Path is: {path!r}")
-
+            await self._checkpath(path=path)
             await self._authenticate(websocket=websocket)
-
-            if self.oneshot:
-                self._debug(f"Listening for a single data packet...")
-                await self._dataloop(websocket=websocket, path=path)
-            else:
-                self._debug(f"Listening for data packets until socket closure...")
-                while True:
-                    await self._dataloop(websocket=websocket, path=path)
-
+            await self._dataget(websocket=websocket, path=path)
             raise exc.Closed(code=1000, reason="Data transfer complete!")
 
         except exc.Closed as close:
-            self._info(f"Closing connection because {close!r} was raised...")
-            await websocket.close(code=close.code, reason=close.reason)
-            self._debug(f"Connection closed successfully!")
+            await self._close(websocket=websocket, close=close)
