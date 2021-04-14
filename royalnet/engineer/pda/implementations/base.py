@@ -209,11 +209,11 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
             self.log.debug(f"Kwargs recursion ended!")
             yield kwargs
         else:
-            extension = remaining.pop(0)
+            extension = remaining[0]
             self.log.debug(f"Getting kwargs from {extension}, {len(remaining)} left...")
             async with extension.kwargs(kwargs) as kwargs:
                 self.log.debug(f"Recursing...")
-                async with self._kwargs(kwargs=kwargs, remaining=remaining) as kwargs:
+                async with self._kwargs(kwargs=kwargs, remaining=remaining[1:]) as kwargs:
                     self.log.debug(f"Bubbling up yields...")
                     yield kwargs
 
