@@ -7,7 +7,7 @@ import abc
 import contextlib
 import asyncio
 import logging
-from royalnet.engineer.dispenser import Dispenser
+from royalnet.engineer.dispenser import Dispenser, LockedDispenserError
 
 if t.TYPE_CHECKING:
     from royalnet.engineer.conversation import ConversationProtocol
@@ -154,9 +154,9 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
 
     def _create_dispenser(self) -> "Dispenser":
         """
-        Create a new dispenser.
+        Create a new :class:`~royalnet.engineer.dispenser.Dispenser` .
 
-        :return: The created dispenser.
+        :return: The created :class:`~royalnet.engineer.dispenser.Dispenser` .
         """
 
         self.log.debug(f"Creating new dispenser...")
@@ -164,7 +164,11 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
 
     def get_or_create_dispenser(self, key: "DispenserKey") -> "Dispenser":
         """
-        .. todo:: Document this.
+        Try to :meth:`.get_dispenser` the :class:`~royalnet.engineer.dispenser.Dispenser` with the specified key, or
+        :meth:`._create_dispenser` a new one if it isn't available.
+
+        :param key: The key of the :class:`~royalnet.engineer.dispenser.Dispenser` .
+        :return: The retrieved or created :class:`~royalnet.engineer.dispenser.Dispenser` .
         """
 
         if key not in self.dispensers:
@@ -202,7 +206,12 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
     @contextlib.asynccontextmanager
     async def _kwargs(self, kwargs: t.Kwargs, remaining: list["PDAExtension"]) -> t.Kwargs:
         """
-        .. todo:: Document this.
+        :func:`contextlib.asynccontextmanager` factory used internally to recurse the generation and cleanup of
+        :meth:`kwargs` .
+
+        :param kwargs: The current ``kwargs`` .
+        :param remaining: The extensions that haven't been processed yet.
+        :return: The corresponding :func:`contextlib.asynccontextmanager`\\ .
         """
 
         if len(remaining) == 0:
@@ -277,17 +286,59 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
 
     async def _run_conversation(self, dispenser: "Dispenser", conv: "ConversationProtocol") -> None:
         """
-        .. todo:: Document this.
+        Run the passed :class:`~royalnet.engineer.conversation.Conversation` in the passed
+        :class:`~royalnet.engineer.dispenser.Dispenser`\\ , while passing the :meth:`.kwargs` provided by the
+        :class:`.PDA` .
+
+        :param dispenser: The :class:`~royalnet.engineer.dispenser.Dispenser` to run the
+                          :class:`~royalnet.engineer.conversation.Conversation` in.
+        :param conv: The :class:`~royalnet.engineer.conversation.Conversation` to run.
         """
 
-        async with self.kwargs(conv=conv) as kwargs:
-            self.log.debug(f"Running {conv!r} in {dispenser!r}...")
-            await dispenser.run(conv=conv, **kwargs)
+        try:
+            async with self.kwargs(conv=conv) as kwargs:
+                self.log.debug(f"Running {conv!r} in {dispenser!r}...")
+                await dispenser.run(conv=conv, **kwargs)
+        except Exception as exception:
+            try:
+                await self._handle_conversation_exc(dispenser=dispenser, conv=conv, exception=exception)
+            except Exception as exception:
+                self.log.error(f"Failed to handle conversation exception: {exception!r}")
 
-    async def _run_all_conversations(self, dispenser: "Dispenser") -> list[asyncio.Task]:
+    @abc.abstractmethod
+    async def _handle_conversation_exc(
+            self,
+            dispenser: "Dispenser",
+            conv: "ConversationProtocol",
+            exception: Exception
+    ) -> None:
         """
-        .. todo:: Document this.
+        Handle :exc:`Exception`\\ s that were not caught by :class:`~royalnet.engineer.conversation.Conversation`\\ s.
+
+        :param dispenser: The dispenser which hosted the :class:`~royalnet.engineer.conversation.Conversation`\\ .
+        :param conv: The :class:`~royalnet.engineer.conversation.Conversation` which didn't catch the error.
+        :param exception: The :class:`Exception` that was raised.
         """
+        raise NotImplementedError()
+
+    async def _schedule_conversations(self, dispenser: "Dispenser") -> list[asyncio.Task]:
+        """
+        Schedule the execution of instance of all the :class:`~royalnet.engineer.conversation.Conversation`\\ s listed
+        in :attr:`.conversations` in the specified :class:`~royalnet.engineer.dispenser.Dispenser`\\ .
+
+        :param dispenser: The :class:`~royalnet.engineer.dispenser.Dispenser` to run the
+                          :class:`~royalnet.engineer.conversation.Conversation`\\ s in.
+        :return: The :class:`list` of :class:`asyncio.Task`\\ s that were created.
+
+        .. seealso:: :meth:`._run_conversation`
+        """
+
+        if dispenser.locked_by:
+            self.log.warning("Tried to run a Conversation in a locked Dispenser!")
+            raise LockedDispenserError(
+                f"The Dispenser is currently locked and cannot start any new Conversation.",
+                dispenser.locked_by
+            )
 
         self.log.info(f"Running in {dispenser!r} all conversations...")
 
@@ -319,7 +370,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         dispenser = self.get_or_create_dispenser(key=key)
 
         self.log.debug(f"Running all conversations...")
-        await self._run_all_conversations(dispenser=dispenser)
+        await self._schedule_conversations(dispenser=dispenser)
 
         self.log.debug(f"Putting {projectile!r} in {dispenser!r}...")
         await dispenser.put(projectile)

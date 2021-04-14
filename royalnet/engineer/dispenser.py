@@ -46,7 +46,7 @@ class Dispenser:
         A :class:`list` of all the running sentries of this dispenser.
         """
 
-        self._locked_by: t.List[ConversationProtocol] = []
+        self.locked_by: t.List[ConversationProtocol] = []
         """
         The conversation that are currently locking this dispenser.
         
@@ -91,10 +91,10 @@ class Dispenser:
         """
         log.debug(f"Trying to run: {conv!r}")
 
-        if self._locked_by:
-            log.debug(f"Dispenser is locked by {self._locked_by!r}, refusing to run {conv!r}")
+        if self.locked_by:
+            log.debug(f"Dispenser is locked by {self.locked_by!r}, refusing to run {conv!r}")
             raise LockedDispenserError(
-                f"The Dispenser is currently locked and cannot start any new Conversation.", self._locked_by)
+                f"The Dispenser is currently locked and cannot start any new Conversation.", self.locked_by)
 
         log.debug(f"Running: {conv!r}")
         with self.sentry() as sentry:
@@ -114,16 +114,16 @@ class Dispenser:
 
         :param conv: The conversation that requested the lock.
 
-        .. seealso:: :attr:`._locked_by`
+        .. seealso:: :attr:`.locked_by`
         """
         log.debug(f"Adding lock: {conv!r}")
-        self._locked_by.append(conv)
+        self.locked_by.append(conv)
 
         try:
             yield
         finally:
             log.debug(f"Clearing lock: {conv!r}")
-            self._locked_by.remove(conv)
+            self.locked_by.remove(conv)
 
 
 __all__ = (

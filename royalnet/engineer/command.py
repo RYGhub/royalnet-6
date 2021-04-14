@@ -114,13 +114,20 @@ class FullCommand:
 
     def __call__(self, *, _sentry: s.Sentry, **kwargs) -> t.Awaitable[t.Optional[c.ConversationProtocol]]:
         """
-        .. todo:: Document this.
+        :return: Get the awaitable of the :class:`.FullCommand`.
+
+        .. seealso:: :meth:`.run`
         """
         return self.run(_sentry=_sentry, **kwargs)
 
     async def run(self, *, _sentry: s.Sentry, **kwargs) -> t.Optional[c.ConversationProtocol]:
         """
-        .. todo:: Document this.
+        Run the command.
+
+        :param _sentry: The :class:`~royalnet.engineer.sentry.Sentry` the command should use to receive
+                        :class:`~royalnet.engineer.bullet.projectiles.Projectile`\\ s.
+        :param kwargs: Additional kwargs to pass to the :attr:`.teleported_f` .
+        :return: :data:`None` or another :class:`~royalnet.engineer.conversation.Conversation` to switch to.
         """
 
         log.debug(f"Awaiting a bullet...")
