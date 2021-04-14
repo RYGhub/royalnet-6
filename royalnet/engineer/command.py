@@ -44,7 +44,7 @@ class NotAlphanumericNameError(ValueError, CommandNameException):
     """
 
 
-class FullCommand(c.Conversation):
+class FullCommand:
     """
     A :class:`.FullCommand` is a :class:`~royalnet.engineer.conversation.Conversation` which is started by a
     :class:`~royalnet.engineer.projectiles.Projectile` having a text matching the :attr:`.pattern`;
@@ -61,16 +61,15 @@ class FullCommand(c.Conversation):
 
         self.plain_f = f
         """
-        A reference to the unteleported function :attr:`.f`\\ .
+        A reference to the unteleported function.
         """
 
         self.teleported_f = tp.Teleporter(f, validate_input=True, validate_output=False)
         """
-        .. todo:: Document this.
+        A reference to the teleported function.
+        
+        .. seealso:: :class:`royalnet.engineer.teleporter.Teleporter`
         """
-
-        # I have no idea what is wrong with this.
-        super().__init__(self.run)
 
         if len(names) < 1:
             raise MissingNameError(f"Passed 'names' list is empty", names)
@@ -113,14 +112,15 @@ class FullCommand(c.Conversation):
         plus = f" + {nc-1} other names" if (nc := len(self.names)) > 1 else ""
         return f"<{self.__class__.__qualname__}: {self.name()!r}{plus}>"
 
+    def __call__(self, *, _sentry: s.Sentry, **kwargs) -> t.Awaitable[t.Optional[c.ConversationProtocol]]:
+        """
+        .. todo:: Document this.
+        """
+        return self.run(_sentry=_sentry, **kwargs)
+
     async def run(self, *, _sentry: s.Sentry, **kwargs) -> t.Optional[c.ConversationProtocol]:
         """
-        Run the command as if it was a conversation.
-
-        :param _sentry: The :class:`~royalnet.engineer.sentry.Sentry` to use for the conversation.
-        :param kwargs: Keyword arguments to pass to the wrapped function :attr:`.f` .
-        :return: The result of the wrapped function :attr:`.f` , or :data:`None` if the first projectile received does
-                 not satisfy the requirements of the command.
+        .. todo:: Document this.
         """
 
         log.debug(f"Awaiting a bullet...")
@@ -156,7 +156,7 @@ class FullCommand(c.Conversation):
 
             with _sentry.dispenser().lock(self):
                 log.debug(f"Passing args to function: {message_kwargs!r}")
-                return await super().__call__(
+                return await self.teleported_f(
                     _sentry=_sentry,
                     _proj=projectile,
                     _msg=msg,
@@ -167,7 +167,7 @@ class FullCommand(c.Conversation):
 
         else:
             log.debug(f"Passing args to function: {message_kwargs!r}")
-            return await super().__call__(
+            return await self.teleported_f(
                 _sentry=_sentry,
                 _proj=projectile,
                 _msg=msg,
@@ -182,7 +182,7 @@ class FullCommand(c.Conversation):
 
         :return: The help :class:`str` for this command, or :data:`None` if the command has no docstring.
         """
-        return self.f.__doc__
+        return self.plain_f.__doc__
 
 
 class PartialCommand:
