@@ -10,6 +10,12 @@
 .. automodule:: royalnet.engineer.bullet
 
 
+``pda``
+----------
+
+.. automodule:: royalnet.engineer.pda
+
+
 ``contents``
 ~~~~~~~~~~~~
 
