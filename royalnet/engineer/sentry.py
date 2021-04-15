@@ -16,7 +16,7 @@ from . import discard
 
 if t.TYPE_CHECKING:
     from .dispenser import Dispenser
-    from .bullet import Projectile, Casing
+    from .bullet import Projectile
 
 log = logging.getLogger(__name__)
 
