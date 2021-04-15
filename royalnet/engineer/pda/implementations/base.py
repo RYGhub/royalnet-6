@@ -334,11 +334,8 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         """
 
         if dispenser.locked_by:
-            self.log.warning("Tried to run a Conversation in a locked Dispenser!")
-            raise LockedDispenserError(
-                f"The Dispenser is currently locked and cannot start any new Conversation.",
-                dispenser.locked_by
-            )
+            self.log.debug("Refusing to run new Conversations in a locked Dispenser")
+            return []
 
         self.log.info(f"Running in {dispenser!r} all conversations...")
 
