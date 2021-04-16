@@ -8,6 +8,7 @@ import royalnet.royaltyping as t
 
 import logging
 import re
+import warnings
 
 from . import conversation as c
 from . import sentry as s
@@ -16,6 +17,10 @@ from . import teleporter as tp
 from . import exc
 
 log = logging.getLogger(__name__)
+
+
+warnings.warn("Commands are deprecated, please use the PDAs and Conversations instead!",
+              DeprecationWarning, stacklevel=2)
 
 
 class CommandException(exc.EngineerException):
