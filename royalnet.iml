@@ -15,11 +15,4 @@
     <orderEntry type="jdk" jdkName="Poetry (royalnet)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
-  <component name="TemplatesService">
-    <option name="TEMPLATE_FOLDERS">
-      <list>
-        <option value="$MODULE_DIR$/docs/source/_templates" />
-      </list>
-    </option>
-  </component>
 </module>
