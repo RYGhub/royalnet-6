@@ -8,7 +8,7 @@ import royalnet.royaltyping as t
 
 import logging
 import abc
-import teleporter as tp
+import royalnet.engineer.teleporter as tp
 
 log = logging.getLogger(__name__)
 
