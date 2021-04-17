@@ -93,4 +93,5 @@ class TeleportingConversation(DecoratingConversation):
 __all__ = (
     "Conversation",
     "DecoratingConversation",
+    "TeleportingConversation",
 )
