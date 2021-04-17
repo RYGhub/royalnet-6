@@ -2,5 +2,4 @@
 ===================================
 
 .. automodule:: royalnet.lazy
-
-.. todo:: Document this.
+   :imported-members:

@@ -4,76 +4,59 @@
 .. automodule:: royalnet.engineer
 
 
-``bullet``
-----------
-
-.. automodule:: royalnet.engineer.bullet
-
-
-``pda``
-----------
+``pda`` - Central connection unit
+---------------------------------
 
 .. automodule:: royalnet.engineer.pda
-
-
-``contents``
-~~~~~~~~~~~~
-
-.. automodule:: royalnet.engineer.bullet.contents
    :imported-members:
 
 
-``projectiles``
-~~~~~~~~~~~~~~~
+``bullet`` - Data containers
+----------------------------
 
-.. automodule:: royalnet.engineer.bullet.projectiles
+.. automodule:: royalnet.engineer.bullet
    :imported-members:
 
 
-``command``
------------
-
-.. automodule:: royalnet.engineer.command
-
-
-``conversation``
-----------------
+``conversation`` - Conversation utilities
+-----------------------------------------
 
 .. automodule:: royalnet.engineer.conversation
+   :special-members: __call__
 
 
-``dispenser``
--------------
+``dispenser`` - Event distributors
+----------------------------------
 
 .. automodule:: royalnet.engineer.dispenser
 
 
-``sentry``
-----------
+``sentry`` - Event listeners
+----------------------------
 
 .. automodule:: royalnet.engineer.sentry
    :special-members: __or__
 
 
-``teleporter``
---------------
-
-.. automodule:: royalnet.engineer.teleporter
-
-
-``wrench``
-----------
+``wrench`` - Filters for Sentry
+-------------------------------
 
 .. automodule:: royalnet.engineer.wrench
 
 
-``discard``
------------
+``discard`` - Special filter exception
+--------------------------------------
 
 .. automodule:: royalnet.engineer.discard
 
 
-``exc``
--------
+``teleporter`` - Argument validators
+------------------------------------
+
+.. automodule:: royalnet.engineer.teleporter
+
+
+``exc`` - General errors
+------------------------
 
 .. automodule:: royalnet.engineer.exc

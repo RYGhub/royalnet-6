@@ -20,7 +20,7 @@ import pkg_resources
 
 project = 'royalnet'
 # noinspection PyShadowingBuiltins
-copyright = '2020, Stefano Pigozzi'
+copyright = '2021, Stefano Pigozzi'
 author = 'Stefano Pigozzi'
 
 # The full version, including alpha/beta/rc tags
@@ -98,3 +98,4 @@ autodoc_default_options = {
 # -- Automodule settings -----------------------------------------------------
 
 todo_include_todos = True
+
