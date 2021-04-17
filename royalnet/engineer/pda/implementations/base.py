@@ -1,5 +1,6 @@
 """
-.. todo:: Document this.
+This module contains the base :class:`.PDAImplementation` and its basic implementation
+:class:`.ConversationListImplementation` .
 """
 
 import royalnet.royaltyping as t
@@ -7,16 +8,14 @@ import abc
 import contextlib
 import asyncio
 import logging
-from royalnet.engineer.dispenser import Dispenser, LockedDispenserError
+from royalnet.engineer.dispenser import Dispenser
 
 if t.TYPE_CHECKING:
-    from royalnet.engineer.conversation import ConversationProtocol
     from royalnet.engineer.pda.extensions.base import PDAExtension
     from royalnet.engineer.pda.base import PDA
-    from royalnet.engineer.command import PartialCommand, FullCommand
     from royalnet.engineer.bullet.projectiles import Projectile
 
-DispenserKey = t.TypeVar("DispenserKey")
+DispenserKey = t.Hashable
 
 
 class PDAImplementation(metaclass=abc.ABCMeta):
@@ -101,29 +100,32 @@ class ImplementationAlreadyBoundError(ImplementationException):
 
 class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
     """
-    A :class:`.PDAImplementation` which instantiates multiple :class:`~royalnet.engineer.conversation.Conversation`\\ s
-    before putting a :class:`~royalnet.engineer.bullet.projectile.Projectile` in a
+    A :class:`.PDAImplementation` which instantiates runs all the 
+    :class:`~royalnet.engineer.conversation.Conversation`\\ s in the :attr:`.conversations` :class:`list` 
+    before :meth:`put`\\ ting a :class:`~royalnet.engineer.bullet.projectile.Projectile` in a
     :class:`~royalnet.engineer.dispenser.Dispenser` .
     """
 
     def __init__(self, name: str, extensions: list["PDAExtension"] = None):
         super().__init__(name=name, extensions=extensions)
 
-        self.conversations: list["ConversationProtocol"] = self._create_conversations()
+        self.conversations: list[t.ConversationProtocol] = self._create_conversations()
         """
-        .. todo:: Document this.
+        A :class:`list` of :class:`~royalnet.engi.conversation.Conversation`\\ s that should be run before 
+        :meth:`put`\\ ting a :class:`~royalnet.engineer.bullet.projectile.Projectile` in a
+        :class:`~royalnet.engineer.dispenser.Dispenser` .
         """
 
         self.dispensers: dict[DispenserKey, "Dispenser"] = self._create_dispensers()
         """
-        .. todo:: Document this.
+        A :class:`dict` which maps :func:`hash`\\ able objects to a :class:`~royalnet.engineer.dispenser.Dispenser` .
         """
 
-    def _create_conversations(self) -> list["ConversationProtocol"]:
+    def _create_conversations(self) -> list[t.ConversationProtocol]:
         """
         Create the :attr:`.conversations` :class:`list` of the :class:`.ConversationListPDA`\\ .
 
-        :return: The created :class:`list`\\ .
+        :return: The created :class:`list`, empty by default.
         """
 
         self.log.debug(f"Creating conversations list...")
@@ -133,15 +135,16 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         """
         Create the :attr:`.dispensers` dictionary of the PDA.
 
-        :return: The created dictionary (empty by default).
+        :return: The created :class:`dict`, empty by default.
         """
 
         self.log.debug(f"Creating dispensers list...")
         return {}
 
-    def get_dispenser(self, key: "DispenserKey") -> t.Optional["Dispenser"]:
+    def get(self, key: DispenserKey) -> t.Optional["Dispenser"]:
         """
-        Get a :class:`~royalnet.engineer.dispenser.Dispenser` from :attr:`.dispenser` knowing its key.
+        Get a :class:`~royalnet.engineer.dispenser.Dispenser` from :attr:`.dispensers` given an :func:`hash`\\ able 
+        object.
 
         :param key: The key to get the dispenser with.
         :return: The retrieved dispenser.
@@ -149,7 +152,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         .. seealso:: :meth:`dict.get`
         """
 
-        self.log.debug(f"Getting dispenser: {key!r}")
+        self.log.debug(f"Getting dispenser with key: {key!r}")
         return self.dispensers.get(key)
 
     def _create_dispenser(self) -> "Dispenser":
@@ -162,9 +165,9 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         self.log.debug(f"Creating new dispenser...")
         return Dispenser()
 
-    def get_or_create_dispenser(self, key: "DispenserKey") -> "Dispenser":
+    def get_or_create_dispenser(self, key: DispenserKey) -> "Dispenser":
         """
-        Try to :meth:`.get_dispenser` the :class:`~royalnet.engineer.dispenser.Dispenser` with the specified key, or
+        Try to :meth:`.get` the :class:`~royalnet.engineer.dispenser.Dispenser` with the specified key, or
         :meth:`._create_dispenser` a new one if it isn't available.
 
         :param key: The key of the :class:`~royalnet.engineer.dispenser.Dispenser` .
@@ -174,10 +177,10 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         if key not in self.dispensers:
             self.log.debug(f"{self!r}: Dispenser {key!r} does not exist, creating a new one...")
             self.dispensers[key] = self._create_dispenser()
-        return self.get_dispenser(key=key)
+        return self.get(key=key)
 
     @contextlib.asynccontextmanager
-    async def kwargs(self, conv: "ConversationProtocol") -> t.Kwargs:
+    async def kwargs(self, conv: t.ConversationProtocol) -> t.Kwargs:
         """
         :func:`contextlib.asynccontextmanager` factory which yields the arguments to pass to newly created
         :class:`~royalnet.engineer.conversation.Conversation`\\ s .
@@ -226,7 +229,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
                     self.log.debug(f"Bubbling up yields...")
                     yield kwargs
 
-    def register_conversation(self, conversation: "ConversationProtocol") -> None:
+    def register_conversation(self, conversation: t.ConversationProtocol) -> None:
         """
         Register a new :class:`~royalnet.engineer.conversation.Conversation` to be run when a new
         :class:`~royalnet.engineer.bullet.projectile.Projectile` is :meth:`.put`\\ .
@@ -237,7 +240,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         self.log.debug(f"Registering: {conversation!r}")
         self.conversations.append(conversation)
 
-    def unregister_conversation(self, conversation: "ConversationProtocol") -> None:
+    def unregister_conversation(self, conversation: t.ConversationProtocol) -> None:
         """
         Unregister a :class:`~royalnet.engineer.conversation.Conversation`, stopping it from being run when a new
         :class:`~royalnet.engineer.bullet.projectile.Projectile` is :meth:`.put`\\ .
@@ -248,43 +251,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         self.log.debug(f"Unregistering: {conversation!r}")
         self.conversations.remove(conversation)
 
-    @abc.abstractmethod
-    def _partialcommand_pattern(self, partial: "PartialCommand") -> str:
-        """
-        The pattern to use when :meth:`.complete_partialcommand` is called.
-
-        :param partial: The :class:`~royalnet.engineer.command.PartialCommand` to complete.
-        :return: A :class:`str` to use as pattern.
-        """
-
-        raise NotImplementedError()
-
-    def complete_partialcommand(self, partial: "PartialCommand", names: list[str]) -> "FullCommand":
-        """
-        Complete a :class:`~royalnet.engineer.command.PartialCommand` with its missing fields.
-
-        :param partial: The :class:`~royalnet.engineer.command.PartialCommand` to complete.
-        :param names: The :attr:`~royalnet.engineer.command.FullCommand.names` of that the command should have.
-        :return: The completed :class:`~royalnet.engineer.command.FulLCommand` .
-        """
-
-        self.log.debug(f"Completing: {names!r} → {partial!r}")
-        return partial.complete(names=names, pattern=self._partialcommand_pattern(partial))
-
-    def register_partialcommand(self, partial: "PartialCommand", names: list[str]) -> "FullCommand":
-        """
-        A combination of :meth:`.register_conversation` and :meth:`.complete_partialcommand` .
-
-        :param partial: The :class:`~royalnet.engineer.command.PartialCommand` to complete.
-        :param names: The :attr:`~royalnet.engineer.command.FullCommand.names` of that the command should have.
-        :return: The completed :class:`~royalnet.engineer.command.FulLCommand` .
-        """
-
-        full = self.complete_partialcommand(partial=partial, names=names)
-        self.register_conversation(full)
-        return full
-
-    async def _run_conversation(self, dispenser: "Dispenser", conv: "ConversationProtocol") -> None:
+    async def _run_conversation(self, dispenser: "Dispenser", conv: t.ConversationProtocol) -> None:
         """
         Run the passed :class:`~royalnet.engineer.conversation.Conversation` in the passed
         :class:`~royalnet.engineer.dispenser.Dispenser`\\ , while passing the :meth:`.kwargs` provided by the
@@ -305,11 +272,10 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
             except Exception as exception:
                 self.log.error(f"Failed to handle conversation exception: {exception!r}")
 
-    @abc.abstractmethod
     async def _handle_conversation_exc(
             self,
             dispenser: "Dispenser",
-            conv: "ConversationProtocol",
+            conv: t.ConversationProtocol,
             exception: Exception
     ) -> None:
         """
@@ -319,7 +285,8 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         :param conv: The :class:`~royalnet.engineer.conversation.Conversation` which didn't catch the error.
         :param exception: The :class:`Exception` that was raised.
         """
-        raise NotImplementedError()
+
+        self.log.error(f"Unhandled {exception} in {conv} run in {dispenser}!")
 
     async def _schedule_conversations(self, dispenser: "Dispenser") -> list[asyncio.Task]:
         """
@@ -353,7 +320,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         self.log.info(f"Tasks created: {tasks!r}")
         return tasks
 
-    async def put_projectile(self, key: DispenserKey, projectile: "Projectile") -> None:
+    async def put(self, key: DispenserKey, projectile: "Projectile") -> None:
         """
         Put a :class:`~royalnet.engineer.bullet.projectile.Projectile` in the
         :class:`~royalnet.engineer.dispenser.Dispenser` with the specified key.

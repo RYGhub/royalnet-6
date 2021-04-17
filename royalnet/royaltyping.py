@@ -7,6 +7,7 @@ It should be imported with: ::
 
 """
 
+from __future__ import annotations
 from typing import *
 # noinspection PyUnresolvedReferences
 from typing import IO, TextIO, BinaryIO
@@ -34,6 +35,12 @@ of :class:`str` to :data:`.JSON` mappings.
 
 
 WrenchLike = Callable[[Any], Awaitable[Any]]
+
+
+class ConversationProtocol(Protocol):
+    def __call__(self, **kwargs) -> Awaitable[None]:
+        ...
+
 
 Args = Collection[Any]
 Kwargs = Mapping[str, Any]

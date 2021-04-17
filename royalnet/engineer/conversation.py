@@ -1,76 +1,96 @@
 """
-This module contains :class:`.ConversationProtocol`, the typing stub for conversation functions, and
-:class:`.Conversation`, a decorator for functions which should help in debugging conversations.
+This module contains :class:`.Conversation`, the base type for all conversations in Royalnet, and
+:class:`.DecoratingConversation`, an helper class to instantiate conversations.
 """
 
 from __future__ import annotations
 import royalnet.royaltyping as t
 
 import logging
-
-from . import sentry as s
+import abc
+import teleporter as tp
 
 log = logging.getLogger(__name__)
 
 
-class ConversationProtocol(t.Protocol):
-    """
-    Typing stub for :class:`.Conversation`\\ -compatible functions.
-    """
-    def __call__(self, *, _sentry: s.Sentry, **kwargs) -> t.Awaitable[t.Optional[ConversationProtocol]]:
-        ...
-
-
 class Conversation:
     """
-    :class:`.Conversation`\\ s are functions which await
+    :class:`.Conversation`\\ s are objects which can be called to :attr:`.run` a function which awaits
     :class:`~royalnet.engineer.bullet.projectiles._base.Projectile`\\ s incoming from a
     :class:`~royalnet.engineer.sentry.Sentry` .
 
-    This class is callable ( :meth:`.__call__` ), and can be used in place of plain functions to have better debug
-    information.
+    Regular coroutine functions can be used instead of this class, at the cost of slightly worse debug information and
+    logging.
+
+    .. seealso:: :class:`.DecoratingConversation`
     """
 
-    def __init__(self, f: ConversationProtocol, *_, **__):
-        self.f: ConversationProtocol = f
+    @abc.abstractmethod
+    async def run(self, **kwargs) -> None:
         """
-        The function that is wrapped by this class.
-         
-        It can be called by calling this object as if it was a function::
-        
-            my_conv(_sentry=_sentry, _msg=msg)
+        Run the conversation.
+
+        :param kwargs: The kwargs passed to the :class:`.Conversation` from the
+                       :class:`royalnet.engineer.pda.implementations.base.PDAImplementation` .
+                       Usually, they include at least ``_sentry``, but more may be available based on
+                       the :class:`royalnet.engineer.pda.implementations.base.PDAImplementation`
+                       and available :class:`royalnet.engineer.pda.extensions.base.PDAExtension`\\ s.
+
+        :return: :data:`None` to terminate the conversation, or another :class:`.Conversation` to switch to it.
         """
+        raise NotImplementedError()
 
-    @classmethod
-    def new(cls, *args, **kwargs):
-        """
-        Decorator factory for creating new :class:`.PartialCommand` with the decorator syntax::
-
-            >>> @Conversation.new()
-            ... def my_conv(*, _sentry: s.Sentry, **__):
-            ...     pass
-
-            >>> my_conv
-                <Conversation #1234>
-
-        :return: The created :class:`Conversation` object.
-                 It can still be called in the same way as the previous function!
-        """
-        def decorator(f: ConversationProtocol):
-            c = cls(f=f, *args, **kwargs)
-            log.debug(f"Created: {c!r}")
-            return c
-        return decorator
-
-    def __call__(self, *, _sentry: s.Sentry, **kwargs) -> t.Awaitable[t.Optional[ConversationProtocol]]:
-        log.debug(f"Calling: {self!r}")
-        return self.f(_sentry=_sentry, **kwargs)
+    def __call__(self, **kwargs) -> t.Awaitable[None]:
+        log.debug(f"{self}: Called")
+        return self.run(**kwargs)
 
     def __repr__(self):
         return f"<{self.__class__.__qualname__} #{id(self)}>"
 
 
+class DecoratingConversation(Conversation):
+    """
+    A decorator-based approach to creating a :class:`.Conversation`.
+    """
+
+    def __init__(self, function: t.ConversationProtocol):
+        """
+        Either pass a :attr:`.function` to this constructor, or use it as a decorator to create a new
+        :class:`.Conversation` .
+
+        >>> @DecoratingConversation
+        ... async def decoconv(**kwargs):
+        ...     ...
+            <DecoratedConversation wrapping <function at 0x...>>
+        """
+
+        self.function: t.ConversationProtocol = function
+
+    async def run(self, **kwargs) -> None:
+        await self.function(**kwargs)
+
+    def __repr__(self):
+        return f"<{self.__class__.__qualname__} decorating {self.function}>"
+
+
+class TeleportingConversation(DecoratingConversation):
+    """
+    .. todo:: Document this.
+    """
+
+    def __init__(self, function: t.ConversationProtocol):
+        """
+        .. todo:: Document this.
+        """
+
+        super().__init__(tp.Teleporter(function, validate_output=False))
+        self.bare_function = function
+
+    def __repr__(self):
+        return f"<{self.__class__.__qualname__} teleporting {self.bare_function}>"
+
+
 __all__ = (
-    "ConversationProtocol",
-    "Conversation"
+    "Conversation",
+    "DecoratingConversation",
 )
