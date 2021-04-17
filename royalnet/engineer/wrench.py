@@ -304,6 +304,21 @@ class Check(CheckBase):
         return self.error
 
 
+class AsyncLambda(Wrench):
+    """
+    Apply an asyncronous function over the received objects.
+    """
+
+    def __init__(self, func: t.Callable[[t.Any], t.Awaitable[t.Any]]):
+        self.func: t.Callable[[t.Any], t.Awaitable[t.Any]] = func
+        """
+        The function to apply.
+        """
+
+    async def filter(self, obj: t.Any) -> t.Any:
+        return await self.func(obj)
+
+
 __all__ = (
     "Check",
     "CheckBase",
@@ -318,4 +333,5 @@ __all__ = (
     "Type",
     "Wrench",
     "WrenchException",
+    "AsyncLambda",
 )
