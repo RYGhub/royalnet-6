@@ -65,6 +65,9 @@ class DecoratingConversation(Conversation):
         """
 
         self.function: t.ConversationProtocol = function
+        """
+        The function that will be run when the :class:`.Conversation` is called.
+        """
 
     async def run(self, **kwargs) -> None:
         await self.function(**kwargs)
@@ -75,16 +78,17 @@ class DecoratingConversation(Conversation):
 
 class TeleportingConversation(DecoratingConversation):
     """
-    .. todo:: Document this.
+    An extension to :class:`.DecoratingConversation` which uses a :class:`~royalnet.engineer.teleporter.Teleporter` to
+    type-check and cast the function parameters.
     """
 
     def __init__(self, function: t.ConversationProtocol):
-        """
-        .. todo:: Document this.
-        """
-
         super().__init__(tp.Teleporter(function, validate_output=False))
+
         self.bare_function = function
+        """
+        The unteleported function.
+        """
 
     def __repr__(self):
         return f"<{self.__class__.__qualname__} teleporting {self.bare_function}>"
