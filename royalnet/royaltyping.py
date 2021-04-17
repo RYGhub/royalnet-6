@@ -11,6 +11,8 @@ from __future__ import annotations
 from typing import *
 # noinspection PyUnresolvedReferences
 from typing import IO, TextIO, BinaryIO
+# noinspection PyUnresolvedReferences
+from typing import Pattern, Match
 
 
 JSONScalar = Union[
