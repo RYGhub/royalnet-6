@@ -1,5 +1,5 @@
 """
-.. todo:: Document this.
+This module contains :class:`.Router`, an helper :class:`~royalnet.engineer.conversation.Conversation`.
 """
 
 import royalnet.royaltyping as t
