@@ -44,7 +44,7 @@ class Router(c.Conversation, metaclass=abc.ABCMeta):
             log.debug(f"{pattern.pattern!r} → {conv!r}")
             self.by_pattern[pattern] = conv
 
-    async def run(self, _sentry: s.Sentry, **kwargs) -> None:
+    async def run(self, _sentry: s.Sentry, _conv: t.ConversationProtocol, **kwargs) -> None:
         """
         .. todo:: Document this.
         """
