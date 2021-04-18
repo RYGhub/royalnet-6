@@ -83,6 +83,7 @@ class Router(c.Conversation, metaclass=abc.ABCMeta):
                     conversation = self.by_pattern[pattern]
                     log.debug(f"Matched with {pattern!r}, running conversation {conversation}")
                     await conversation(
+                        **match.groupdict(),
                         **kwargs,
                         _sentry=_sentry,
                         _conv=conversation,
