@@ -244,7 +244,7 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
 
         msg = [
             f"Unhandled {etype.__qualname__} in {conv!r} running in {dispenser!r}: {exception!r}",
-            traceback.format_tb(etb),
+            *traceback.format_tb(etb),
         ]
         self.log.error("\n".join(msg))
 
