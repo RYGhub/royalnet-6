@@ -5,13 +5,14 @@ This module contains the base :class:`.PDAImplementation` and its basic implemen
 
 import royalnet.royaltyping as t
 import abc
-import contextlib
+import sys
 import asyncio
 import logging
+import types
+import traceback
 from royalnet.engineer.dispenser import Dispenser
 
 if t.TYPE_CHECKING:
-    from royalnet.engineer.pda.extensions.base import PDAExtension
     from royalnet.engineer.pda.base import PDA
     from royalnet.engineer.bullet.projectiles import Projectile
 
@@ -23,13 +24,8 @@ class PDAImplementation(metaclass=abc.ABCMeta):
     .. todo:: Document this.
     """
 
-    def __init__(self, name: str, extensions: list["PDAExtension"] = None):
+    def __init__(self, name: str):
         self.name: str = f"{self.namespace}.{name}"
-        """
-        .. todo:: Document this.
-        """
-
-        self.extensions: list["PDAExtension"] = extensions or []
         """
         .. todo:: Document this.
         """
@@ -106,8 +102,8 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
     :class:`~royalnet.engineer.dispenser.Dispenser` .
     """
 
-    def __init__(self, name: str, extensions: list["PDAExtension"] = None):
-        super().__init__(name=name, extensions=extensions)
+    def __init__(self, name: str):
+        super().__init__(name=name)
 
         self.conversations: list[t.ConversationProtocol] = self._create_conversations()
         """
@@ -179,56 +175,6 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
             self.dispensers[key] = self._create_dispenser()
         return self.get(key=key)
 
-    @contextlib.asynccontextmanager
-    async def kwargs(self, conv: t.ConversationProtocol) -> t.Kwargs:
-        """
-        :func:`contextlib.asynccontextmanager` factory which yields the arguments to pass to newly created
-        :class:`~royalnet.engineer.conversation.Conversation`\\ s .
-
-        By default, the following arguments are passed:
-        - ``_pda``: contains the :class:`.PDA` this implementation is bound to.
-        - ``_imp``: contains this :class:`.PDAImplementation` .
-        - ``_conv``: contains the :class:`~royalnet.engineer.conversation.Conversation` which was just created.
-
-        :param conv: The :class:`~royalnet.engineer.conversation.Conversation` to create the args for.
-        :return: The corresponding :func:`contextlib.asynccontextmanager`\\ .
-        """
-    
-        self.log.debug(f"Creating kwargs for: {conv!r}")
-
-        default_kwargs = {
-            "_pda": self.bound_to,
-            "_imp": self,
-            "_conv": conv,
-        }
-
-        async with self._kwargs(default_kwargs, self.extensions) as kwargs:
-            self.log.info(f"Yielding kwargs for {conv!r}: {kwargs!r}")
-            yield kwargs
-
-    @contextlib.asynccontextmanager
-    async def _kwargs(self, kwargs: t.Kwargs, remaining: list["PDAExtension"]) -> t.Kwargs:
-        """
-        :func:`contextlib.asynccontextmanager` factory used internally to recurse the generation and cleanup of
-        :meth:`kwargs` .
-
-        :param kwargs: The current ``kwargs`` .
-        :param remaining: The extensions that haven't been processed yet.
-        :return: The corresponding :func:`contextlib.asynccontextmanager`\\ .
-        """
-
-        if len(remaining) == 0:
-            self.log.debug(f"Kwargs recursion ended!")
-            yield kwargs
-        else:
-            extension = remaining[0]
-            self.log.debug(f"Getting kwargs from {extension}, {len(remaining)} left...")
-            async with extension.kwargs(kwargs) as kwargs:
-                self.log.debug(f"Recursing...")
-                async with self._kwargs(kwargs=kwargs, remaining=remaining[1:]) as kwargs:
-                    self.log.debug(f"Bubbling up yields...")
-                    yield kwargs
-
     def register_conversation(self, conversation: t.ConversationProtocol) -> None:
         """
         Register a new :class:`~royalnet.engineer.conversation.Conversation` to be run when a new
@@ -254,8 +200,11 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
     async def _run_conversation(self, dispenser: "Dispenser", conv: t.ConversationProtocol) -> None:
         """
         Run the passed :class:`~royalnet.engineer.conversation.Conversation` in the passed
-        :class:`~royalnet.engineer.dispenser.Dispenser`\\ , while passing the :meth:`.kwargs` provided by the
-        :class:`.PDA` .
+        :class:`~royalnet.engineer.dispenser.Dispenser` with the following kwargs:
+
+        - ``_pda``: contains the :class:`.PDA` this implementation is bound to.
+        - ``_imp``: contains this :class:`.PDAImplementation` .
+        - ``_conv``: contains the :class:`~royalnet.engineer.conversation.Conversation` which was just created.
 
         :param dispenser: The :class:`~royalnet.engineer.dispenser.Dispenser` to run the
                           :class:`~royalnet.engineer.conversation.Conversation` in.
@@ -263,12 +212,15 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         """
 
         try:
-            async with self.kwargs(conv=conv) as kwargs:
-                self.log.debug(f"Running {conv!r} in {dispenser!r}...")
-                await dispenser.run(conv=conv, **kwargs)
-        except Exception as exception:
+            self.log.debug(f"Running {conv!r} in {dispenser!r}...")
+            await dispenser.run(conv=conv, _conv=conv, _pda=self.bound_to, _imp=self)
+        except Exception:
             try:
-                await self._handle_conversation_exc(dispenser=dispenser, conv=conv, exception=exception)
+                await self._handle_conversation_exc(
+                    dispenser=dispenser,
+                    conv=conv,
+                    *sys.exc_info(),
+                )
             except Exception as exception:
                 self.log.error(f"Failed to handle conversation exception: {exception!r}")
 
@@ -276,17 +228,25 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
             self,
             dispenser: "Dispenser",
             conv: t.ConversationProtocol,
-            exception: Exception
+            etype: t.Type[Exception],
+            exception: Exception,
+            etb: types.TracebackType,
     ) -> None:
         """
         Handle :exc:`Exception`\\ s that were not caught by :class:`~royalnet.engineer.conversation.Conversation`\\ s.
 
         :param dispenser: The dispenser which hosted the :class:`~royalnet.engineer.conversation.Conversation`\\ .
         :param conv: The :class:`~royalnet.engineer.conversation.Conversation` which didn't catch the error.
+        :param etype: The class of the :class:`Exception` that was raised.
         :param exception: The :class:`Exception` that was raised.
+        :param etb: A :class:`types.TracebackType` object containing the traceback of the :class:`Exception`.
         """
 
-        self.log.error(f"Unhandled {exception} in {conv} run in {dispenser}!")
+        msg = [
+            f"Unhandled {etype.__qualname__} in {conv!r} running in {dispenser!r}: {exception!r}",
+            traceback.format_exc(etb)
+        ]
+        self.log.error("\n".join(msg))
 
     async def _schedule_conversations(self, dispenser: "Dispenser") -> list[asyncio.Task]:
         """
