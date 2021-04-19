@@ -14,7 +14,7 @@ import royalnet.lazy
 log = logging.getLogger(__name__)
 
 
-async def use_database(session_class: t.Union[t.Type[sqlalchemy.orm.Session], royalnet.lazy.Lazy], *args, **kwargs):
+def use_database(session_class: t.Union[t.Type[sqlalchemy.orm.Session], royalnet.lazy.Lazy], *args, **kwargs):
     """
     Decorator factory which allows a :class:`~royalnet.engineer.conversation.Conversation` to use a
     :class:`sqlalchemy.orm.Session` created from the passed :class:`sqlalchemy.orm.sessionmaker` .
