@@ -39,3 +39,6 @@ class Casing(metaclass=abc.ABCMeta):
         :return: A :class:`int` value that uniquely identifies the object in this Python interpreter process.
         """
         raise NotImplementedError()
+
+    def __eq__(self, other) -> bool:
+        return self.__class__ is other.__class__ and hash(self) == hash(other)
