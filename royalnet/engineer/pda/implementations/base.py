@@ -217,8 +217,8 @@ class ConversationListImplementation(PDAImplementation, metaclass=abc.ABCMeta):
         except Exception:
             try:
                 await self._handle_conversation_exc(
-                    dispenser=dispenser,
-                    conv=conv,
+                    dispenser,
+                    conv,
                     *sys.exc_info(),
                 )
             except Exception as exception:
