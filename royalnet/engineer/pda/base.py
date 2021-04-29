@@ -36,8 +36,10 @@ class PDA:
         log.fatal("All implementations have finished running?!")
 
     def run(self):
+        log.debug("Getting event loop...")
+        loop = asyncio.get_event_loop()
         log.debug("Running blockingly all implementations...")
-        asyncio.run(self._run())
+        loop.run_until_complete(self._run())
         log.fatal("Blocking call has finished?!")
 
 
