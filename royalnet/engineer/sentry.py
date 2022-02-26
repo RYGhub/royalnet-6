@@ -1,7 +1,6 @@
 """
 This module contains the :class:`.Sentry` class and its descendents :class:`SentryFilter` and :class:`SentrySource`\\ .
 
-
 They support event filtering through Wrenches and coroutine functions.
 """
 
@@ -113,7 +112,7 @@ class Sentry(metaclass=abc.ABCMeta):
         if callable(wrench):
             return SentryFilter(previous=self, wrench=wrench)
         else:
-            raise TypeError("wrench must be either a Wrench or a coroutine function")
+            raise TypeError("wrench parameter must be either a Wrench or a coroutine function")
 
     def __or__(self, other: t.WrenchLike) -> SentryFilter:
         """
@@ -130,7 +129,7 @@ class Sentry(metaclass=abc.ABCMeta):
         try:
             return self.filter(other)
         except TypeError:
-            raise TypeError("Right-side must be either a Wrench or a coroutine function")
+            raise TypeError("Right-side of bitwise-or operator must be either a Wrench or a coroutine function")
 
     @abc.abstractmethod
     def dispenser(self) -> Dispenser:

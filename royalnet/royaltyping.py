@@ -1,9 +1,11 @@
 """
-This module adds some new common royaltyping to the default typing package.
+This module defines adds some common types to the default :mod:`typing` module present in the standard library.
 
-It should be imported with: ::
+It is recommended to import it with *one* of the following statements::
 
+    import royalnet.royaltyping as t
     from royalnet.royaltyping import *
+    from royalnet.royaltyping import <used_objects>
 
 """
 
@@ -45,4 +47,11 @@ class ConversationProtocol(Protocol):
 
 
 Args = Collection[Any]
+"""
+Any possible combination of positional arguments.
+"""
+
 Kwargs = Mapping[str, Any]
+"""
+Any possible combination of keyword arguments.
+"""

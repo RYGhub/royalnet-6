@@ -1,3 +1,7 @@
+"""
+This module implements the :class:`.Updatable` mixin, along with the special class :class:`.DoNotUpdateType` and the singleton :data:`.DoNotUpdate`.
+"""
+
 class Updatable:
     """
     A mixin that can be added to a declared class to add update methods, allowing attributes to be set from

@@ -14,21 +14,33 @@ log = logging.getLogger(__name__)
 
 class Router(c.Conversation, metaclass=abc.ABCMeta):
     """
-    .. todo:: Document this.
+    A conversation which delegates event handling to other conversations by matching the contents of the first message received to one or multiple regexes.
     """
 
     def __init__(self):
-        """
-        .. todo:: Document this.
-        """
-
         self.by_pattern: dict[t.Pattern, t.ConversationProtocol] = {}
-        self.by_name: dict[str, t.ConversationProtocol] = {}
-        self.by_command: dict[t.ConversationProtocol, t.List[str]] = {}
-
-    def register_conversation(self, conv: t.ConversationProtocol, names: t.List[str], patterns: t.List[t.Pattern]):
         """
-        .. todo:: Document this.
+        A :class:`dict` mapping regex patterns to conversations registered with this router.
+        """
+
+        self.by_name: dict[str, t.ConversationProtocol] = {}
+        """
+        A :class:`dict` mapping command names to conversations registered with this router.
+        """
+
+        self.by_command: dict[t.ConversationProtocol, t.List[str]] = {}
+        """
+        A :class:`dict` mapping conversations registered with this router to lists of command names.
+        """
+
+        self.else_convs: list[t.ConversationProtocol] = []
+        """
+        A :class:`list` of conversations to delegate event handling to in case no other pattern is matched.
+        """
+
+    def register_conversation(self, conv: t.ConversationProtocol, names: t.List[str], patterns: t.List[t.Pattern]) -> None:
+        """
+        Registers a new conversation with the :class:`.Router`, allowing it to run if one of the specified ``patterns`` is matched.
         """
 
         log.debug(f"Registering {conv!r}...")
@@ -45,10 +57,6 @@ class Router(c.Conversation, metaclass=abc.ABCMeta):
             self.by_pattern[pattern] = conv
 
     async def run(self, _sentry: s.Sentry, _conv: t.ConversationProtocol, **kwargs) -> None:
-        """
-        .. todo:: Document this.
-        """
-
         dispenser = _sentry.dispenser()
 
         log.debug(f"Locking {dispenser!r}...")
@@ -93,8 +101,16 @@ class Router(c.Conversation, metaclass=abc.ABCMeta):
                     )
                     return
             else:
-                log.debug("No matches found")
-
+                for conversation in self.else_convs:
+                    log.debug(f"No matches found, running conversation {conversation}")
+                    await conversation(
+                        **kwargs,
+                        _sentry=_sentry,
+                        _conv=conversation,
+                        _msg=msg,
+                        _text=text,
+                        _router=self,
+                    )
 
 __all__ = (
     "Router",

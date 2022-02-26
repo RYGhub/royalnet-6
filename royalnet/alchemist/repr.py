@@ -1,3 +1,8 @@
+"""
+This submodule implements :func:`repr`\\ esentation mixins.
+"""
+
+
 class ColRepr:
     """
     A mixin that can be added to a declared class to display all columns of the table with their values in the

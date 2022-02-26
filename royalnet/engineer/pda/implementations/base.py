@@ -4,6 +4,7 @@ This module contains the base :class:`.PDAImplementation` and its basic implemen
 """
 
 import royalnet.royaltyping as t
+import royalnet.exc as exc
 import abc
 import sys
 import asyncio
@@ -21,28 +22,28 @@ DispenserKey = t.Hashable
 
 class PDAImplementation(metaclass=abc.ABCMeta):
     """
-    .. todo:: Document this.
+    An abstract class describing the interface of a PDA implementation.
     """
 
     def __init__(self, name: str):
         self.name: str = f"{self.namespace}.{name}"
         """
-        .. todo:: Document this.
+        The namespaced name of the PDA implementation.
         """
 
         self.bound_to: t.Optional["PDA"] = None
         """
-        .. todo:: Document this.
+        The PDA this implementation is bound to.
         """
 
         self.logger_name: str = f"{__name__}.PDAImplementation.{self.namespace}.{name}"
         """
-        .. todo:: Document this.
+        The namespaced name of the :class:`logging.Logger` that is being used by this PDA implementation.
         """
 
         self.log: logging.Logger = logging.getLogger(self.logger_name)
         """
-        .. todo:: Document this.
+        The :class:`logging.Logger` that is being used by this PDA implementation.
         """
 
     def __repr__(self):
@@ -53,7 +54,11 @@ class PDAImplementation(metaclass=abc.ABCMeta):
 
     def bind(self, pda: "PDA") -> None:
         """
-        .. todo:: Document this.
+        Bind this PDA implementation to a specific PDA.
+
+        Required for objects of this class to function.
+
+        :raises .ImplemetationAlreadyBoundError: if the PDA implementation is already bound to a PDA.
         """
 
         self.log.debug(f"Trying to bind to {pda!r}...")
@@ -66,9 +71,9 @@ class PDAImplementation(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def namespace(self):
+    def namespace(self) -> str:
         """
-        .. todo:: Document this.
+        The namespace of this PDA implementation.
         """
 
         raise NotImplementedError()
@@ -82,15 +87,15 @@ class PDAImplementation(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class ImplementationException(Exception):
+class ImplementationException(exc.RoyalnetException, metaclass=abc.ABCMeta):
     """
-    .. todo:: Document this.
+    Base class for exceptions raised by a PDA implementation.
     """
 
 
 class ImplementationAlreadyBoundError(ImplementationException):
     """
-    .. todo:: Document this.
+    The PDA implementation is already bound to a PDA.
     """
 
 

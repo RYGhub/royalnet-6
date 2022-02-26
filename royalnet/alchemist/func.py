@@ -1,3 +1,7 @@
+"""
+This submodule implements quick alias for some common SQL filtering functions.
+"""
+
 import sqlalchemy
 
 
