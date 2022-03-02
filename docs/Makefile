@@ -1,12 +1,14 @@
-# Minimal makefile for Sphinx documentation
-#
+# Slightly extended makefile for Sphinx documentation
 
-# You can set these variables from the command line, and also
-# from the environment for the first two.
-SPHINXOPTS    ?=
-SPHINXBUILD   ?= sphinx-build
-SOURCEDIR     = source
-BUILDDIR      = build
+# Sphinx options
+export SPHINXOPTS    =
+export SPHINXBUILD   = "sphinx-build"
+export SOURCEDIR     = "source"
+export BUILDDIR      = "build"
+
+# LaTeX builder options
+export LATEXMKOPTS   =
+export LATEXOPTS     = "-interaction=nonstopmode"
 
 # Put it first so that "make" without argument is like "make help".
 help:
