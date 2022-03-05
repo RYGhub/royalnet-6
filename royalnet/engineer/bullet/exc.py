@@ -1,5 +1,5 @@
 """
-This modules contains the exceptions which can happen in bullets.
+This module contains the exceptions which can be raised by bullets.
 """
 
 from .. import exc

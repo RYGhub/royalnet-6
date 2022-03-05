@@ -11,7 +11,14 @@ class Discard(BaseException):
 
     def __init__(self, obj, message):
         self.obj = obj
+        """
+        The discarded object.
+        """
+
         self.message = message
+        """
+        The reason for the discard.
+        """
 
     def __repr__(self):
         return f"<{self.__class__.__qualname__}>"
