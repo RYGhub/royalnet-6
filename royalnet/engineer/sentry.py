@@ -5,12 +5,12 @@ They support event filtering through Wrenches and coroutine functions.
 """
 
 from __future__ import annotations
-import royalnet.royaltyping as t
 
 import abc
-import logging
 import asyncio
+import logging
 
+import royalnet.royaltyping as t
 from . import discard
 
 if t.TYPE_CHECKING:

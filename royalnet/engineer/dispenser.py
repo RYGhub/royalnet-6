@@ -3,14 +3,14 @@ This module contains the :class:`.Dispenser` class.
 """
 
 from __future__ import annotations
-import royalnet.royaltyping as t
 
-import logging
 import contextlib
+import logging
 
-from .sentry import SentrySource
-from .exc import EngineerException
+import royalnet.royaltyping as t
 from .bullet.projectiles import Projectile
+from .exc import EngineerException
+from .sentry import SentrySource
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +26,7 @@ class LockedDispenserError(DispenserException):
     The :class:`.Dispenser` couldn't start a new :class:`~royalnet.engineer.conversation.Conversation` as it is
     currently :attr:`.Dispenser.lock`\\ ed.
     """
+
     def __init__(self, locked_by, *args):
         super().__init__(*args)
         self.locked_by = locked_by

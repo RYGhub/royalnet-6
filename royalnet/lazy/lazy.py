@@ -1,6 +1,6 @@
 from __future__ import annotations
-from royalnet.royaltyping import *
 
+from royalnet.royaltyping import *
 
 Result = TypeVar("Result")
 
@@ -43,6 +43,7 @@ class Lazy:
     def decorator(cls, *args, **kwargs):
         def deco(func):
             return cls(func, *args, **kwargs)
+
         return deco
 
 

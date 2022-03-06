@@ -10,12 +10,12 @@ It is recommended to import it with *one* of the following statements::
 """
 
 from __future__ import annotations
+
 from typing import *
 # noinspection PyUnresolvedReferences
 from typing import IO, TextIO, BinaryIO
 # noinspection PyUnresolvedReferences
 from typing import Pattern, Match
-
 
 JSONScalar = Union[
     None,
@@ -36,7 +36,6 @@ JSON = Union[
 A recursive JSON value: either a :data:`.JSONScalar`, or a :class:`list` of :data:`.JSON` objects, or a :class:`dict` 
 of :class:`str` to :data:`.JSON` mappings. 
 """
-
 
 WrenchLike = Callable[[Any], Awaitable[Any]]
 

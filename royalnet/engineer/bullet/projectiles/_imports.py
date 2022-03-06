@@ -1,12 +1,11 @@
-import royalnet.royaltyping as t
-
-import sqlalchemy.orm as so
 import abc
+
 import async_property as ap
+import sqlalchemy.orm as so
 
-from .. import exc
+import royalnet.royaltyping as t
 from ._base import Projectile
-
+from .. import exc
 
 __all__ = (
     "t",

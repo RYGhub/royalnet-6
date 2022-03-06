@@ -1,4 +1,3 @@
-import pytest
 from royalnet.lazy import Lazy
 
 

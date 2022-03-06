@@ -1,6 +1,6 @@
 from __future__ import annotations
-from ._imports import *
 
+from ._imports import *
 from .button import Button
 
 if t.TYPE_CHECKING:

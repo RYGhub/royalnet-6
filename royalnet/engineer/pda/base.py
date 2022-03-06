@@ -3,11 +3,13 @@ This module contains the base :class:`.PDA` class.
 """
 
 import asyncio
-import royalnet.royaltyping as t
 import logging
+
+import royalnet.royaltyping as t
 
 if t.TYPE_CHECKING:
     from royalnet.engineer.pda.implementations.base import PDAImplementation
+
     DispenserKey = t.TypeVar("DispenserKey")
 
 log = logging.getLogger(__name__)

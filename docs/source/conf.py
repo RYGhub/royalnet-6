@@ -26,7 +26,6 @@ author = 'Stefano Pigozzi'
 # The full version, including alpha/beta/rc tags
 release = pkg_resources.get_distribution("royalnet").version
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -64,7 +63,6 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-
 # -- Intersphinx options -----------------------------------------------------
 
 intersphinx_mapping = {
@@ -98,4 +96,3 @@ autodoc_default_options = {
 # -- Automodule settings -----------------------------------------------------
 
 todo_include_todos = True
-

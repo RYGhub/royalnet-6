@@ -4,11 +4,13 @@ This module contains **bolts**, utility decorators which can be used to enhance
 """
 
 from __future__ import annotations
+
+import functools
+import logging
 import typing as t
 
-import logging
 import sqlalchemy.orm
-import functools
+
 import royalnet.lazy
 
 log = logging.getLogger(__name__)
@@ -41,7 +43,9 @@ def use_database(session_class: t.Union[t.Type[sqlalchemy.orm.Session], royalnet
             log.debug(f"Closed database session from {session_class!r} successfully!")
             # Shouldn't be necessary, conversations return None anyways
             return result
+
         return decorated
+
     return decorator
 
 

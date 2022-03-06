@@ -2,12 +2,13 @@
 This module contains :class:`.Router`, an helper :class:`~royalnet.engineer.conversation.Conversation`.
 """
 
-import royalnet.royaltyping as t
-import royalnet.engineer.conversation as c
-import royalnet.engineer.sentry as s
-import royalnet.engineer.bullet as b
 import abc
 import logging
+
+import royalnet.engineer.bullet as b
+import royalnet.engineer.conversation as c
+import royalnet.engineer.sentry as s
+import royalnet.royaltyping as t
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +39,8 @@ class Router(c.Conversation, metaclass=abc.ABCMeta):
         A :class:`list` of conversations to delegate event handling to in case no other pattern is matched.
         """
 
-    def register_conversation(self, conv: t.ConversationProtocol, names: t.List[str], patterns: t.List[t.Pattern]) -> None:
+    def register_conversation(self, conv: t.ConversationProtocol, names: t.List[str],
+                              patterns: t.List[t.Pattern]) -> None:
         """
         Registers a new conversation with the :class:`.Router`, allowing it to run if one of the specified ``patterns`` is matched.
         """
@@ -111,6 +113,7 @@ class Router(c.Conversation, metaclass=abc.ABCMeta):
                         _text=text,
                         _router=self,
                     )
+
 
 __all__ = (
     "Router",

@@ -4,6 +4,7 @@ This module contains the projectiles related to messages: :class:`.MessageReceiv
 """
 
 from __future__ import annotations
+
 from ._imports import *
 
 if t.TYPE_CHECKING:

@@ -2,9 +2,9 @@
 This submodule implements the :class:`.Makeable` mixin.
 """
 
-from royalnet.royaltyping import *
 import sqlalchemy.orm as o
 
+from royalnet.royaltyping import *
 
 T = TypeVar('T')
 

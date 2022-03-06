@@ -4,10 +4,10 @@ acting similarly to function factories and allowing to easily define filter func
 """
 
 from __future__ import annotations
-import royalnet.royaltyping as t
 
 import abc
 
+import royalnet.royaltyping as t
 from . import discard
 from . import exc
 

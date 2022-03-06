@@ -4,11 +4,12 @@ This module contains :class:`.Conversation`, the base type for all conversations
 """
 
 from __future__ import annotations
-import royalnet.royaltyping as t
 
-import logging
 import abc
+import logging
+
 import royalnet.engineer.teleporter as tp
+import royalnet.royaltyping as t
 
 log = logging.getLogger(__name__)
 
