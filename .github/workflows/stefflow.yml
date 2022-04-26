@@ -75,7 +75,7 @@ jobs:
 
       - name: "🔨 Setup Poetry Python environment"
         id: pyenv
-        uses: Steffo99/actions-poetry-deps@0.2.3
+        uses: Steffo99/actions-poetry-deps@v0.2.4
 
       - name: "🧪 Run tests"
         run: |
@@ -104,7 +104,7 @@ jobs:
         uses: abatilo/actions-poetry@v2.1.4
 
       - name: "🔨 Setup Poetry Python environment"
-        uses: Steffo99/actions-poetry-deps@0.2.3
+        uses: Steffo99/actions-poetry-deps@v0.2.4
 
       - name: "🏗 Build package with Poetry"
         run: poetry build --no-interaction
@@ -144,7 +144,7 @@ jobs:
 
       - name: "🔨 Setup Poetry Python environment"
         id: pyenv
-        uses: Steffo99/actions-poetry-deps@0.2.3
+        uses: Steffo99/actions-poetry-deps@v0.2.4
 
       - name: "🏗 Build HTML documentation with Sphinx"
         working-directory: docs/
