@@ -35,7 +35,7 @@ A recursive JSON value: either a :data:`.JSONScalar`, or a :class:`list` of :dat
 of :class:`str` to :data:`.JSON` mappings. 
 """
 
-WrenchLike = Callable[[Any], Awaitable[Any]]
+Filter = Callable[[Any], Awaitable[Any]]
 
 
 class ConversationProtocol(Protocol):
