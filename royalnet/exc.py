@@ -1,10 +1,10 @@
 """
-This module exports the base exceptions used in all :mod:`royalnet` modules.
+This module exports the exceptions used in :mod:`royalnet`.
 """
 
 
 class RoyalnetException(Exception):
-    """An exception raised by a Royalnet module."""
+    """Base class for all other :mod:`royalnet` exceptions."""
 
 
 __all__ = ("RoyalnetException",)
