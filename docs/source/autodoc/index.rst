@@ -13,6 +13,12 @@ The following pages are automatically generated from the docstrings of the vario
 .. automodule:: royalnet
 
 
+:mod:`royalnet.royaltyping`
+===========================
+
+.. automodule:: royalnet.royaltyping
+
+
 :mod:`royalnet.validation`
 ==========================
 
