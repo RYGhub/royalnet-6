@@ -36,6 +36,10 @@ of :class:`str` to :data:`.JSON` mappings.
 """
 
 AsyncFilter = Callable[[Any], Awaitable[Any]]
+"""
+A function taking an item as input, and returning it in a different form after being awaited.
+"""
+
 
 class ConversationProtocol(Protocol):
     def __call__(self, **kwargs) -> Awaitable[None]:
