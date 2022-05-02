@@ -35,8 +35,7 @@ A recursive JSON value: either a :data:`.JSONScalar`, or a :class:`list` of :dat
 of :class:`str` to :data:`.JSON` mappings. 
 """
 
-Filter = Callable[[Any], Awaitable[Any]]
-
+AsyncFilter = Callable[[Any], Awaitable[Any]]
 
 class ConversationProtocol(Protocol):
     def __call__(self, **kwargs) -> Awaitable[None]:
