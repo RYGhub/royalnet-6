@@ -1,11 +1,9 @@
 """
-This module defines adds some common types to the default :mod:`typing` module present in the standard library.
+This module extends :mod:`typing` with some additional types frequently used in :mod:`royalnet`.
 
-It is recommended to import it with *one* of the following statements::
+It is recommended to import it with the following statement::
 
     import royalnet.royaltyping as t
-    from royalnet.royaltyping import *
-    from royalnet.royaltyping import <used_objects>
 
 """
 
