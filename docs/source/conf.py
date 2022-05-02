@@ -1,98 +1,151 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
+# Extended Sphinx configuration
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-# -- Path setup --------------------------------------------------------------
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+###########
+# Imports #
+###########
 
-import pkg_resources
+import datetime
 
-# -- Project information -----------------------------------------------------
 
-project = 'royalnet'
-# noinspection PyShadowingBuiltins
-copyright = '2021, Stefano Pigozzi'
+###########################
+# Developer configuration #
+###########################
+# Alter these to reflect the nature of your project!
+
+# Project name
+project = 'Royalnet'
+# Project author
 author = 'Stefano Pigozzi'
+# Project copyright
+project_copyright = f'{datetime.date.today().year}, {author}'
 
-# The full version, including alpha/beta/rc tags
-release = pkg_resources.get_distribution("royalnet").version
+# Sphinx language
+language = "en"
 
-# -- General configuration ---------------------------------------------------
+# Configuration for the theme
+html_theme_options = {
+    # Set this to the main color of your project
+    "style_nav_header_background": "#FF7F00",
+}
+html_context = {
+    "display_github": True,
+    # Set this to the name of the organization this GitHub repository is in
+    "github_user": "Steffo99",
+    # Set this to the name of this repository
+    "github_repo": "royalnet",
+    # Set this to the name of the main branch slash docs slash
+    "github_version": "master/docs/",
+}
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
+
+##########################
+# Advanced configuration #
+##########################
+# Change these options only if you need further customization
+
+# Sphinx extensions
 extensions = [
-    "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
-    'sphinx.ext.todo',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.todo",
 ]
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+# Source files encoding
+source_encoding = "UTF-8"
+# Source file extensions
+source_suffix = {
+    ".rst": "restructuredtext",
+}
+# Source files parsers
+source_parsers = {}
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['Thumbs.db', '.DS_Store']
+# The doc from which to start rendering
+root_doc = "index"
+# Files to ignore when rendering
+exclude_patterns = [
+    "build",
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+]
+# Sphinx template files
+templates_path = [
+    '_templates',
+]
+
+# Prologue of all rst files
+rst_prolog = ""
+# Epilogue of all rst files
+rst_epilog = ""
+
+# Default domain
+primary_domain = "py"
+# Default role
+default_role = "any"
 
 # Print warnings on the page
-keep_warnings = True
-
+keep_warnings = False
 # Display more warnings than usual
-nitpicky = True
+nitpicky = False
 
-# -- Options for HTML output -------------------------------------------------
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-html_theme = 'sphinx_rtd_theme'
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-
-# -- Intersphinx options -----------------------------------------------------
-
+# Intersphinx URLs
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.8", None),
-    "sqlalchemy": ("https://docs.sqlalchemy.org/en/13/", None),
-    "async_property": ("https://async-property.readthedocs.io/en/latest/", None),
+    "python": ("https://docs.python.org/3.10", None),
 }
+# Manpages URL
+manpages_url = "https://man.archlinux.org/"
 
+# HTML builder theme
+html_theme = 'sphinx_rtd_theme'
+# Title of the HTML page
+html_title = f"{project}"
+# Short title of the HTML page
+html_short_title = f"{project}"
+# Path of the documentation static files
+html_static_path = [
+    "_static",
+]
+# Path of extra files to add to the build
+html_extra_path = [
+    "_extra",
+]
+# Disable additional indexes
+html_domain_indices = False
 
-# -- Setup function ----------------------------------------------------------
-def setup(app):
-    app.add_css_file('royalblue.css')
+# LaTeX rendering engine to use
+latex_engine = "lualatex"
+# LaTeX top level title type
+latex_toplevel_sectioning = "chapter"
+# LaTeX URLs rendering
+latex_show_urls = "footnote"
+# LaTeX theme
+latex_theme = "manual"
 
-
-# -- Substitutions -----------------------------------------------------------
-
-
-rst_prolog = """
-
-"""
-
-# -- Automodule settings -----------------------------------------------------
-
-autodoc_default_options = {
-    'members': True,
-    'member-order': 'bysource',
-    'special-members': '__init__',
-    'undoc-members': True,
-}
-
-# -- Automodule settings -----------------------------------------------------
-
+# TODOs
 todo_include_todos = True
+todo_emit_warnings = True
+todo_link_only = False
+
+# Smartquotes
+smartquotes_excludes = {
+    "languages": [
+        # Smartquotes is completely broken in italian!
+        "it",
+        # Keep the default, just in case
+        "ja",
+    ],
+    "builders": [
+        "man",
+        "text",
+    ]
+}
+
+# Autodoc
+autodoc_member_order = "bysource"
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": True,
+}
