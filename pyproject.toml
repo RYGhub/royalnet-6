@@ -22,7 +22,7 @@ build-backend = "poetry.core.masonry.api"
 name = "royalnet"
 
 # The version of the package.
-version = "6.7.0"
+version = "6.7.1"
 
 # A brief, one-sentence description about your project.
 description = "A multiplatform chat bot library"
