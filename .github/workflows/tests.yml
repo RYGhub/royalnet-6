@@ -40,4 +40,4 @@ jobs:
       - name: "🧪 Run check"
         run: |
           source ${{ steps.pyenv.outputs.pyenv }}/activate
-          python -m compileall thorunimore
+          python -m compileall royalnet
